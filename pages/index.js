@@ -65,7 +65,7 @@ export default function Home() {
             onClick={() => launchEditor('video')}
             className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-105 transition-transform font-semibold"
           >
-            🎬 Video Editor
+            🎬 Video Combinor
           </button>
           <button
             onClick={() => launchEditor('audio')}

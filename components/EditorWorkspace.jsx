@@ -1,7 +1,7 @@
 // components/EditorWorkspace.jsx
 import { useState } from 'react';
 import PhotoEditor from './PhotoEditor';
-import VideoEditor from './VideoEditor';
+import VideoCombiner from './VideoCombiner';
 import AudioEditor from './AudioEditor';
 import VideoToAudioConverter from './VideoToAudioConverter';
 
@@ -22,7 +22,7 @@ export default function EditorWorkspace({ type, onExit }) {
       case 'photo':
         return <PhotoEditor />;
       case 'video':
-        return <VideoEditor />;
+        return <VideoCombiner />;
       case 'audio':
         return <AudioEditor />;
       case 'video-to-audio':
@@ -38,7 +38,7 @@ export default function EditorWorkspace({ type, onExit }) {
       <div className="flex justify-between items-center p-4 bg-surface bg-opacity-90 backdrop-blur-md absolute top-0 left-0 right-0 z-10">
         <h2 className="text-xl font-bold text-primary">
           {type === 'photo' ? '📷 Photo Editor' :
-           type === 'video' ? '🎬 Video Editor' :
+           type === 'video' ? '🎬 Video Combinor' :
            type === 'audio' ? '🎵 Audio Editor' :
            type === 'video-to-audio' ? '🎬➡🎵 Converter' : 'Editor'}
         </h2>
