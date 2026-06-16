@@ -98,6 +98,12 @@ export default function Home() {
           >
             🎬 Video Collage
           </button>
+          <button
+  onClick={() => launchEditor('media-compressor')}
+  className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-105 transition-transform font-semibold"
+>
+  📦 Media Compressor
+</button>
         </div>
 
         <ThemePicker />

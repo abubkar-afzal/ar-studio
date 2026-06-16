@@ -6,6 +6,7 @@ import AudioEditor from './AudioEditor';
 import VideoToAudioConverter from './VideoToAudioConverter';
 import PhotoCollageEditor from './PhotoCollageEditor';
 import VideoCollageEditor from './VideoCollageEditor';
+import MediaCompressor from './MediaCompressor';
 
 export default function EditorWorkspace({ type, onExit }) {
   const [error, setError] = useState(null);
@@ -33,6 +34,8 @@ export default function EditorWorkspace({ type, onExit }) {
         return <PhotoCollageEditor />;
       case 'video-collage':
         return <VideoCollageEditor />;
+        case 'media-compressor':
+        return <MediaCompressor />;
       default:
         return <div className="text-red-500 text-center mt-20">Unknown editor type: {type}</div>;
     }
@@ -43,13 +46,14 @@ export default function EditorWorkspace({ type, onExit }) {
       {/* Top bar with Exit and Fullscreen controls */}
       <div className="flex justify-between items-center p-4 bg-surface bg-opacity-90 backdrop-blur-md absolute top-0 left-0 right-0 z-10">
         <h2 className="text-xl font-bold text-primary">
-          {type === 'photo' ? '📷 Photo Editor' :
-           type === 'video' ? '🎬 Video Combinor' :
-           type === 'audio' ? '🎵 Audio Editor' :
-           type === 'video-to-audio' ? '🎬➡🎵 Converter' :
-           type === 'photo-collage' ? '📷 Photo Collage' :
-           type === 'video-collage' ? '🎬 Video Collage' : 'Editor'}
-        </h2>
+  {type === 'photo' ? '📷 Photo Editor' :
+   type === 'video' ? '🎬 Video Combinor' :
+   type === 'audio' ? '🎵 Audio Editor' :
+   type === 'video-to-audio' ? '🎬➡🎵 Converter' :
+   type === 'photo-collage' ? '📷 Photo Collage' :
+   type === 'video-collage' ? '🎬 Video Collage' :
+   type === 'media-compressor' ? '📦 Media Compressor' : 'Editor'}
+</h2>
         <div className="flex gap-4">
           <button
             onClick={requestFullscreen}
