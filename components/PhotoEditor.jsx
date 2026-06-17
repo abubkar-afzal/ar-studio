@@ -1,5 +1,7 @@
 // components/PhotoEditor.jsx
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { FaUpload } from 'react-icons/fa';
 
 const MAX_CANVAS_WIDTH = 1920;
 const MAX_CANVAS_HEIGHT = 1080;
@@ -391,90 +393,132 @@ export default function PhotoEditor() {
     link.click();
   };
 
-  return (
-    <div className="p-6 flex flex-col items-center gap-4">
-      <input type="file" accept="image/*" onChange={handleFile} ref={fileInputRef} className="hidden" />
-      <button onClick={() => fileInputRef.current.click()} className="px-6 py-3 bg-primary text-white rounded-xl">
-        Upload Image
-      </button>
+ return (
+    <div className="p-6 flex flex-col items-center gap-4" style={{ backgroundColor: "var(--white)", color: "var(--black)" }}>
+      <input
+  type="file"
+  accept="image/*"
+  onChange={handleFile}
+  ref={fileInputRef}
+  id="photo-upload"          
+  className="hidden"
+/>
+<motion.label
+  htmlFor="photo-upload"      
+  className="file-upload-label"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  <FaUpload /> Upload Image   
+</motion.label>
 
       {image && (
         <>
-          {/* Filter controls */}
           <div className="flex flex-wrap gap-4 justify-center">
-            <label className="flex items-center gap-2">Brightness
+            <label className="flex items-center gap-2" style={{ color: "var(--black)" }}>
+              Brightness
               <input type="range" min="0" max="200" value={filterValues.brightness}
-                onChange={(e) => { setFilterValues(f => ({...f, brightness: +e.target.value})); saveHistory(); }} />
+                onChange={(e) => { setFilterValues(f => ({...f, brightness: +e.target.value})); saveHistory(); }}
+                className="w-32" />
             </label>
-            <label className="flex items-center gap-2">Contrast
+            <label className="flex items-center gap-2" style={{ color: "var(--black)" }}>
+              Contrast
               <input type="range" min="0" max="200" value={filterValues.contrast}
-                onChange={(e) => { setFilterValues(f => ({...f, contrast: +e.target.value})); saveHistory(); }} />
+                onChange={(e) => { setFilterValues(f => ({...f, contrast: +e.target.value})); saveHistory(); }}
+                className="w-32" />
             </label>
-            <label className="flex items-center gap-2">Saturation
+            <label className="flex items-center gap-2" style={{ color: "var(--black)" }}>
+              Saturation
               <input type="range" min="0" max="200" value={filterValues.saturation}
-                onChange={(e) => { setFilterValues(f => ({...f, saturation: +e.target.value})); saveHistory(); }} />
+                onChange={(e) => { setFilterValues(f => ({...f, saturation: +e.target.value})); saveHistory(); }}
+                className="w-32" />
             </label>
-            <label className="flex items-center gap-2">Blur
+            <label className="flex items-center gap-2" style={{ color: "var(--black)" }}>
+              Blur
               <input type="range" min="0" max="10" step="0.1" value={filterValues.blur}
-                onChange={(e) => { setFilterValues(f => ({...f, blur: +e.target.value})); saveHistory(); }} />
+                onChange={(e) => { setFilterValues(f => ({...f, blur: +e.target.value})); saveHistory(); }}
+                className="w-32" />
             </label>
           </div>
 
-          {/* Undo/Redo/Brush/Crop/Download */}
           <div className="flex flex-wrap gap-4 justify-center">
-            <button onClick={undo} className="px-4 py-2 bg-surface rounded-lg">↩ Undo</button>
-            <button onClick={redo} className="px-4 py-2 bg-surface rounded-lg">↪ Redo</button>
-            {!cropMode && <button onClick={enterCropMode} className="px-4 py-2 bg-surface rounded-lg">✂ Crop</button>}
-            {cropMode && <button onClick={applyCrop} className="px-4 py-2 bg-green-600 text-white rounded-lg">✅ Apply Crop</button>}
-            {cropMode && <button onClick={cancelCrop} className="px-4 py-2 bg-red-500 text-white rounded-lg">❌ Cancel</button>}
-            <button onClick={resetCrop} className="px-4 py-2 bg-surface rounded-lg">↺ Reset Crop</button>
-            <label className="flex items-center gap-2">Brush:
-              <input type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} />
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={undo} className="px-4 py-2 rounded-lg cursor-pointer"
+              style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}>↩ Undo</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={redo} className="px-4 py-2 rounded-lg cursor-pointer"
+              style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}>↪ Redo</motion.button>
+            {!cropMode && (
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={enterCropMode} className="px-4 py-2 rounded-lg cursor-pointer"
+                style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}>✂ Crop</motion.button>
+            )}
+            {cropMode && (
+              <>
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  onClick={applyCrop} className="px-4 py-2 rounded-lg cursor-pointer"
+                  style={{ backgroundColor: "var(--green)", color: "var(--white)" }}>✅ Apply Crop</motion.button>
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  onClick={cancelCrop} className="px-4 py-2 rounded-lg cursor-pointer"
+                  style={{ backgroundColor: "var(--red)", color: "var(--white)" }}>❌ Cancel</motion.button>
+              </>
+            )}
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={resetCrop} className="px-4 py-2 rounded-lg cursor-pointer"
+              style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}>↺ Reset Crop</motion.button>
+            <label className="flex items-center gap-2" style={{ color: "var(--black)" }}>
+              Brush:
+              <input type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} className="w-8 h-8 p-0 border-0 cursor-pointer" />
               <input type="range" min="1" max="20" value={brushSize} onChange={(e) => setBrushSize(+e.target.value)} className="w-20" />
             </label>
-            <button onClick={download} className="px-4 py-2 bg-green-600 text-white rounded-lg">💾 Download</button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={download} className="px-4 py-2 rounded-lg cursor-pointer"
+              style={{ backgroundColor: "var(--green)", color: "var(--white)" }}>💾 Download</motion.button>
           </div>
 
-          {/* Crop control panel (visible in crop mode) */}
           {cropMode && (
-            <div className="bg-surface p-4 rounded-xl w-full max-w-xl space-y-3">
-              <p className="font-semibold text-sm">Crop Area (pixels)</p>
+            <div className="p-4 rounded-xl w-full max-w-xl space-y-3" style={{ backgroundColor: "var(--lightgray)" }}>
+              <p className="font-semibold text-sm" style={{ color: "var(--black)" }}>Crop Area (pixels)</p>
               <div className="grid grid-cols-2 gap-2">
-                <label className="flex flex-col text-xs">X
-                  <input type="number" value={cropX} onChange={(e) => setCropX(+e.target.value)} onBlur={updateCropFromInputs} className="bg-bg p-1 rounded" />
+                <label className="flex flex-col text-xs" style={{ color: "var(--gray)" }}>X
+                  <input type="number" value={cropX} onChange={(e) => setCropX(+e.target.value)} onBlur={updateCropFromInputs}
+                    className="p-1 rounded" style={{ backgroundColor: "var(--white)", color: "var(--black)" }} />
                 </label>
-                <label className="flex flex-col text-xs">Y
-                  <input type="number" value={cropY} onChange={(e) => setCropY(+e.target.value)} onBlur={updateCropFromInputs} className="bg-bg p-1 rounded" />
+                <label className="flex flex-col text-xs" style={{ color: "var(--gray)" }}>Y
+                  <input type="number" value={cropY} onChange={(e) => setCropY(+e.target.value)} onBlur={updateCropFromInputs}
+                    className="p-1 rounded" style={{ backgroundColor: "var(--white)", color: "var(--black)" }} />
                 </label>
-                <label className="flex flex-col text-xs">Width
-                  <input type="number" value={cropW} onChange={(e) => setCropW(+e.target.value)} onBlur={updateCropFromInputs} className="bg-bg p-1 rounded" />
+                <label className="flex flex-col text-xs" style={{ color: "var(--gray)" }}>Width
+                  <input type="number" value={cropW} onChange={(e) => setCropW(+e.target.value)} onBlur={updateCropFromInputs}
+                    className="p-1 rounded" style={{ backgroundColor: "var(--white)", color: "var(--black)" }} />
                 </label>
-                <label className="flex flex-col text-xs">Height
-                  <input type="number" value={cropH} onChange={(e) => setCropH(+e.target.value)} onBlur={updateCropFromInputs} className="bg-bg p-1 rounded" />
+                <label className="flex flex-col text-xs" style={{ color: "var(--gray)" }}>Height
+                  <input type="number" value={cropH} onChange={(e) => setCropH(+e.target.value)} onBlur={updateCropFromInputs}
+                    className="p-1 rounded" style={{ backgroundColor: "var(--white)", color: "var(--black)" }} />
                 </label>
               </div>
-              <button onClick={updateCropFromInputs} className="px-4 py-1 bg-secondary text-white rounded-lg text-sm">Apply Numbers</button>
-
-              <p className="font-semibold text-sm pt-2">Preset Ratios</p>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={updateCropFromInputs} className="px-4 py-1 rounded-lg text-sm cursor-pointer"
+                style={{ backgroundColor: "var(--blue)", color: "var(--white)" }}>Apply Numbers</motion.button>
+              <p className="font-semibold text-sm pt-2" style={{ color: "var(--black)" }}>Preset Ratios</p>
               <div className="flex flex-wrap gap-2">
-                <button onClick={() => applyPreset(16, 9)} className="px-3 py-1 bg-bg rounded-lg text-sm">16:9</button>
-                <button onClick={() => applyPreset(4, 3)} className="px-3 py-1 bg-bg rounded-lg text-sm">4:3</button>
-                <button onClick={() => applyPreset(1, 1)} className="px-3 py-1 bg-bg rounded-lg text-sm">1:1</button>
-                <button onClick={() => applyPreset(9, 16)} className="px-3 py-1 bg-bg rounded-lg text-sm">9:16</button>
-                <button onClick={() => applyPreset(21, 9)} className="px-3 py-1 bg-bg rounded-lg text-sm">21:9</button>
+                {[[16,9],[4,3],[1,1],[9,16],[21,9]].map(([w,h]) => (
+                  <motion.button key={`${w}-${h}`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => applyPreset(w,h)} className="px-3 py-1 rounded-lg text-sm cursor-pointer"
+                    style={{ backgroundColor: "var(--white)", color: "var(--black)" }}>{w}:{h}</motion.button>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Canvas */}
           <canvas
             ref={canvasRef}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            className="border-2 border-primary rounded-2xl max-w-full shadow-2xl"
-            style={{ width: '100%', maxHeight: '70vh', objectFit: 'contain', cursor: cropMode ? 'default' : drawing ? 'crosshair' : 'default' }}
+            className="border-2 rounded-2xl max-w-full shadow-2xl"
+            style={{ borderColor: "var(--blue)", maxHeight: '70vh', objectFit: 'contain', cursor: cropMode ? 'default' : drawing ? 'crosshair' : 'default' }}
           />
         </>
       )}

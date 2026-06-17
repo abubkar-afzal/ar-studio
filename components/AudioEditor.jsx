@@ -1,5 +1,7 @@
 // components/AudioEditor.jsx
 import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { FaMusic } from 'react-icons/fa';
 
 export default function AudioEditor() {
   const [audioBuffer, setAudioBuffer] = useState(null);
@@ -171,38 +173,56 @@ export default function AudioEditor() {
   }, [selection]);
 
   return (
-    <div className="p-6 flex flex-col items-center gap-4">
-      <input type="file" accept="audio/*" onChange={handleFile} className="mb-4" />
+    <div className="p-6 flex flex-col items-center gap-4" style={{ backgroundColor: "var(--white)", color: "var(--black)" }}>
+      <input type="file" accept="audio/*" onChange={handleFile} id="audio-upload" className="hidden" />
+<motion.label
+  htmlFor="audio-upload"
+  className="file-upload-label"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  <FaMusic /> Load Audio
+</motion.label>
 
       {audioBuffer && (
         <>
-          <canvas ref={canvasRef} width={800} height={200} className="border-2 border-primary rounded-xl w-full max-w-4xl" />
+          <canvas ref={canvasRef} width={800} height={200} className="border-2 rounded-xl w-full max-w-4xl" style={{ borderColor: "var(--blue)" }} />
 
           <div className="flex flex-wrap gap-4 items-center justify-center">
-            <label>Start (s):
-              <input type="number" step={0.1} value={selection[0]} onChange={(e) => setSelection([+e.target.value, selection[1]])} className="bg-surface p-1 rounded w-20" />
+            <label style={{ color: "var(--black)" }}>Start (s):
+              <input type="number" step={0.1} value={selection[0]} onChange={(e) => setSelection([+e.target.value, selection[1]])}
+                className="p-1 rounded w-20" style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }} />
             </label>
-            <label>End (s):
-              <input type="number" step={0.1} value={selection[1]} onChange={(e) => setSelection([selection[0], +e.target.value])} className="bg-surface p-1 rounded w-20" />
+            <label style={{ color: "var(--black)" }}>End (s):
+              <input type="number" step={0.1} value={selection[1]} onChange={(e) => setSelection([selection[0], +e.target.value])}
+                className="p-1 rounded w-20" style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }} />
             </label>
-            <button onClick={resetSelection} className="px-3 py-1 bg-surface rounded-lg">Reset Selection</button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={resetSelection} className="px-3 py-1 rounded-lg cursor-pointer"
+              style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}>Reset Selection</motion.button>
           </div>
 
           <div className="flex flex-wrap gap-4 items-center">
-            <button onClick={playSelection} disabled={playing} className="px-4 py-2 bg-accent text-white rounded-lg">▶ Play</button>
-            <button onClick={stopPlayback} disabled={!playing} className="px-4 py-2 bg-red-600 text-white rounded-lg">⏹ Stop</button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={playSelection} disabled={playing} className="px-4 py-2 rounded-lg cursor-pointer"
+              style={{ backgroundColor: "var(--blue)", color: "var(--white)" }}>▶ Play</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={stopPlayback} disabled={!playing} className="px-4 py-2 rounded-lg cursor-pointer"
+              style={{ backgroundColor: "var(--red)", color: "var(--white)" }}>⏹ Stop</motion.button>
           </div>
 
           <div className="flex flex-wrap gap-4 items-center">
-            <label>Gain:
-              <input type="range" min={0} max={2} step={0.1} value={gain} onChange={(e) => setGain(+e.target.value)} />
+            <label style={{ color: "var(--black)" }}>Gain:
+              <input type="range" min={0} max={2} step={0.1} value={gain} onChange={(e) => setGain(+e.target.value)} className="w-32" />
             </label>
-            <label>Lowpass (Hz):
-              <input type="range" min={20} max={8000} step={1} value={filterFreq} onChange={(e) => setFilterFreq(+e.target.value)} />
+            <label style={{ color: "var(--black)" }}>Lowpass (Hz):
+              <input type="range" min={20} max={8000} step={1} value={filterFreq} onChange={(e) => setFilterFreq(+e.target.value)} className="w-32" />
             </label>
           </div>
 
-          <button onClick={exportAudio} className="px-6 py-3 bg-primary text-white rounded-xl">💾 Export Selection</button>
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            onClick={exportAudio} className="px-6 py-3 rounded-xl cursor-pointer"
+            style={{ backgroundColor: "var(--green)", color: "var(--white)" }}>💾 Export Selection</motion.button>
         </>
       )}
     </div>

@@ -1,54 +1,94 @@
 // components/ThemePicker.jsx
-import { useContext } from 'react';
-import { AppContext } from '../pages/_app';
-import axios from 'axios'; // or use fetch
+import { useContext, useState } from "react";
+import { motion } from "framer-motion";
+import { AppContext } from "../pages/_app";
+import { FaSun, FaMoon, FaRobot, FaLeaf } from "react-icons/fa";
 
 const themes = [
-  { name: 'light', label: '☀️ Light', colors: ['#ffffff', '#2563eb'] },
-  { name: 'dark', label: '🌙 Dark', colors: ['#0f172a', '#4f46e5'] },
-  { name: 'cyberpunk', label: '🤖 Cyberpunk', colors: ['#0d0221', '#ff007f'] },
-  { name: 'nature', label: '🌿 Nature', colors: ['#f0fdf4', '#047857'] },
+  { name: "light", label: "Light", icon: <FaSun /> },
+  { name: "dark", label: "Dark", icon: <FaMoon /> },
+  { name: "cyberpunk", label: "Cyberpunk", icon: <FaRobot /> },
+  { name: "nature", label: "Nature", icon: <FaLeaf /> },
+];
+
+const colorKeys = [
+  "white", "black", "gray", "lightgray", "darkgray",
+  "red", "green", "blue", "yellow", "purple", "pink", "orange", "cyan",
 ];
 
 export default function ThemePicker() {
-  const { theme, setTheme } = useContext(AppContext);
+  const { theme, setTheme, customColors, setCustomColors } = useContext(AppContext);
+  const [isCustomOpen, setIsCustomOpen] = useState(false);
 
-  const handleThemeChange = async (newTheme) => {
+  const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
-    // Persist theme to SQLite via API
-    try {
-      await fetch('/api/save-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme: newTheme }),
-      });
-    } catch (e) {
-      console.warn('Could not save theme', e);
-    }
+  };
+
+  const handleColorChange = (key, value) => {
+    const updated = { ...(customColors || {}), [key]: value };
+    setCustomColors(updated);
+  };
+
+  const resetColors = () => {
+    setCustomColors(null); // removes custom overrides; app will revert to theme defaults
   };
 
   return (
-    <div className="flex flex-wrap gap-4 justify-center">
-      {themes.map((t) => (
-        <button
-          key={t.name}
-          onClick={() => handleThemeChange(t.name)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all duration-500
-            ${theme === t.name ? 'border-primary scale-110 shadow-lg' : 'border-muted hover:scale-105'}
-            bg-surface text-text`}
-        >
-          <span className="flex gap-1">
-            {t.colors.map((color, i) => (
-              <span
-                key={i}
-                className="w-4 h-4 rounded-full border border-muted"
-                style={{ backgroundColor: color }}
+    <div
+      className="p-4 rounded-2xl border"
+      style={{
+        backgroundColor: "var(--lightgray)",
+        borderColor: "var(--darkgray)",
+      }}
+    >
+      <div className="flex flex-wrap gap-2 justify-center mb-4">
+        {themes.map((t) => (
+          <motion.button
+            key={t.name}
+            onClick={() => handleThemeChange(t.name)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-3 py-1.5 rounded-full border-2 transition-all duration-300 cursor-pointer text-sm mm:text-base flex items-center gap-1"
+            style={{
+              backgroundColor: theme === t.name ? "var(--blue)" : "var(--white)",
+              color: theme === t.name ? "var(--white)" : "var(--black)",
+              borderColor: theme === t.name ? "var(--blue)" : "var(--darkgray)",
+            }}
+          >
+            {t.icon} {t.label}
+          </motion.button>
+        ))}
+      </div>
+
+      <details className="mt-2">
+        <summary className="text-sm font-semibold cursor-pointer" style={{ color: "var(--gray)" }}>
+           Custom Colors
+        </summary>
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {colorKeys.map((key) => (
+            <div key={key} className="flex items-center gap-2">
+              <label className="text-xs capitalize flex-1" style={{ color: "var(--black)" }}>
+                {key}
+              </label>
+              <input
+                type="color"
+                value={(customColors && customColors[key]) || "#000000"}
+                onChange={(e) => handleColorChange(key, e.target.value)}
+                className="w-8 h-8 p-0 border-0 cursor-pointer rounded-full"
               />
-            ))}
-          </span>
-          {t.label}
-        </button>
-      ))}
+            </div>
+          ))}
+        </div>
+        <motion.button
+          onClick={resetColors}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="mt-3 px-4 py-1.5 text-sm rounded-lg cursor-pointer"
+          style={{ backgroundColor: "var(--blue)", color: "var(--white)" }}
+        >
+          Reset to Theme Defaults
+        </motion.button>
+      </details>
     </div>
   );
 }

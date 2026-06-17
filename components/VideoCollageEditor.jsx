@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import { FaVideo, FaMusic, FaPlay, FaPause, FaExpand, FaCompress, FaUndo, FaRedo, FaTrash, FaExchangeAlt } from "react-icons/fa";
 
 const CANVAS_PRESETS = {
   "1:1 (1080x1080)": { width: 1080, height: 1080 },
@@ -30,7 +32,7 @@ const PRESETS = [
 ];
 
 export default function VideoCollageEditor() {
-  // State (identical to previous)
+  // ---------- State ----------
   const [sourceVideos, setSourceVideos] = useState([]);
   const [elements, setElements] = useState([]);
   const [selectedFrame, setSelectedFrame] = useState(null);
@@ -59,8 +61,8 @@ export default function VideoCollageEditor() {
   const [exportError, setExportError] = useState(null);
   const cancelledRef = useRef(false);
   const mediaRecorderRef = useRef(null);
-  const bgAudioElRef = useRef(null);            // <audio> for preview
-  const exportAudioElRef = useRef(null);         // separate <audio> for export (avoids conflict)
+  const bgAudioElRef = useRef(null);
+  const exportAudioElRef = useRef(null);
 
   const canvasRef = useRef(null);
   const videoElementsRef = useRef(new Map());
@@ -68,7 +70,7 @@ export default function VideoCollageEditor() {
   const playStartTimeRef = useRef(0);
   const isExportingRef = useRef(false);
 
-  // ---------- helpers (identical to before, omitted for brevity but fully present) ----------
+  // ---------- Helpers ----------
   const getSourceVideo = (id) => sourceVideos.find(v => v.id === id);
 
   const clearVideoElement = useCallback((sourceVideoId) => {
@@ -145,7 +147,7 @@ export default function VideoCollageEditor() {
     }));
   };
 
-  // ---------- canvas drawing ----------
+  // ---------- Canvas drawing ----------
   const drawOnCanvas = useCallback((canvas, hideOverlay = false) => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -210,7 +212,7 @@ export default function VideoCollageEditor() {
     };
   }, [sourceVideos, drawStaticPreview, getVideoElement]);
 
-  // ---------- background audio (preview) ----------
+  // ---------- Background audio ----------
   useEffect(() => {
     if (backgroundAudio && !bgAudioElRef.current) {
       const a = new Audio(backgroundAudio.url);
@@ -231,7 +233,7 @@ export default function VideoCollageEditor() {
     else audio.pause();
   }, [isPlaying, backgroundAudio]);
 
-  // ---------- playback ----------
+  // ---------- Playback ----------
   const stopPlayback = useCallback(() => {
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     animationFrameRef.current = null;
@@ -290,7 +292,7 @@ export default function VideoCollageEditor() {
     animationFrameRef.current = requestAnimationFrame(animate);
   }, [currentTime, projectDuration, elements, getVideoElement, drawStaticPreview, stopPlayback, backgroundAudio]);
 
-  // ---------- mouse handlers (resize, swap, context menu, delete, replace) ----------
+  // ---------- Mouse handlers ----------
   const handleCanvasMouseDown = (e) => {
     if (layoutMode || swapMode || selectedFrame === null) return;
     const canvas = canvasRef.current;
@@ -434,7 +436,7 @@ export default function VideoCollageEditor() {
     }).catch(() => setBackgroundAudio({ file, url, duration: 0, waveform: null, trimStart: 0, trimEnd: 0 }));
   };
 
-  // ========== ROBUST EXPORT (offscreen canvas, exact duration) ==========
+  // ---------- Export ----------
   const exportVideo = async () => {
     if (elements.length === 0 || projectDuration <= 0) {
       setExportError("Add at least one video with duration.");
@@ -443,11 +445,9 @@ export default function VideoCollageEditor() {
     cancelledRef.current = false;
     setExporting(true); setExportProgress(0); setExportDone(false); setExportBlob(null); setExportError(null);
 
-    // Hide overlay
     isExportingRef.current = true;
     drawStaticPreview();
 
-    // 1. Wait for all videos to be ready
     await Promise.all(elements.map(el => {
       if (!el.sourceVideoId) return Promise.resolve();
       const v = getVideoElement(el.sourceVideoId);
@@ -458,7 +458,6 @@ export default function VideoCollageEditor() {
       });
     }));
 
-    // 2. Start all source videos at trimStart (they will be updated by the export loop)
     elements.forEach(el => {
       if (!el.sourceVideoId) return;
       const v = getVideoElement(el.sourceVideoId);
@@ -469,9 +468,7 @@ export default function VideoCollageEditor() {
       v.play().catch(() => {});
     });
 
-    // 3. Background audio – create a fresh <audio> element for export to avoid conflicts
     if (backgroundAudio && bgAudioElRef.current) {
-      // Pause the preview audio and create a new one for export
       bgAudioElRef.current.pause();
       const exportAudio = new Audio(backgroundAudio.url);
       exportAudio.loop = false;
@@ -480,7 +477,6 @@ export default function VideoCollageEditor() {
       await exportAudio.play().catch(() => {});
     }
 
-    // 4. Offscreen canvas
     const offscreen = document.createElement("canvas");
     offscreen.width = canvasSize.width;
     offscreen.height = canvasSize.height;
@@ -488,7 +484,6 @@ export default function VideoCollageEditor() {
     const canvasStream = offscreen.captureStream(FPS);
     let combinedStream = canvasStream;
 
-    // 5. Mix background audio into stream if present
     let audioCtx = null, sourceNode = null;
     if (exportAudioElRef.current) {
       try {
@@ -532,7 +527,6 @@ export default function VideoCollageEditor() {
 
     recorder.start();
 
-    // 6. Frame-accurate drawing loop
     const startTime = performance.now() / 1000;
     const drawInterval = setInterval(() => {
       if (cancelledRef.current) {
@@ -546,7 +540,6 @@ export default function VideoCollageEditor() {
       const elapsed = now - startTime;
       setExportProgress(Math.min(100, Math.round((elapsed / projectDuration) * 100)));
 
-      // Update video positions to keep them in sync with elapsed time
       elements.forEach(el => {
         if (!el.sourceVideoId) return;
         const v = getVideoElement(el.sourceVideoId);
@@ -558,10 +551,8 @@ export default function VideoCollageEditor() {
         } else v.pause();
       });
 
-      // Draw onto offscreen canvas (always hide overlay)
       drawOnCanvas(offscreen, true);
 
-      // Stop exactly after projectDuration, but draw one more frame + flush
       if (elapsed >= projectDuration) {
         drawOnCanvas(offscreen, true);
         if (recorder.state === 'recording') recorder.requestData();
@@ -572,7 +563,6 @@ export default function VideoCollageEditor() {
       }
     }, FRAME_MS);
 
-    // Safety timeout (1.5x project duration)
     setTimeout(() => {
       if (recorder.state === 'recording') {
         clearInterval(drawInterval);
@@ -605,135 +595,280 @@ export default function VideoCollageEditor() {
   const selectedSourceVideo = selectedElement ? getSourceVideo(selectedElement.sourceVideoId) : null;
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-white" onContextMenu={(e) => e.preventDefault()}>
+    <div
+      className="flex flex-col h-full"
+      style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+      onContextMenu={(e) => e.preventDefault()}
+    >
       {/* Toolbar */}
-      <div className="p-3 bg-gray-800 flex flex-wrap gap-3 items-center border-b border-gray-700">
+      <div
+        className="p-3 flex flex-wrap gap-3 items-center border-b"
+        style={{ backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)" }}
+      >
         <input type="file" accept="video/*" multiple onChange={handleVideoUpload} className="hidden" id="video-upload" />
-        <label htmlFor="video-upload" className="px-3 py-1 bg-blue-600 rounded text-sm cursor-pointer">Add Videos</label>
+        <motion.label
+          htmlFor="video-upload"
+          className="file-upload-label"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <FaVideo /> Add Videos
+        </motion.label>
 
-        <select value={preset?.name} onChange={(e) => setPreset(PRESETS.find(p => p.name === e.target.value) || PRESETS[0])} className="bg-gray-700 rounded px-2 py-1 text-sm">
+        <select
+          value={preset?.name}
+          onChange={(e) => setPreset(PRESETS.find(p => p.name === e.target.value) || PRESETS[0])}
+          className="rounded px-2 py-1 text-sm cursor-pointer"
+          style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+        >
           {PRESETS.map(p => (<option key={p.name}>{p.name}</option>))}
         </select>
 
-        <select value={canvasSizeKey} onChange={(e) => setCanvasSizeKey(e.target.value)} className="bg-gray-700 rounded px-2 py-1 text-sm">
+        <select
+          value={canvasSizeKey}
+          onChange={(e) => setCanvasSizeKey(e.target.value)}
+          className="rounded px-2 py-1 text-sm cursor-pointer"
+          style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+        >
           {Object.keys(CANVAS_PRESETS).map(k => (<option key={k}>{k}</option>))}
         </select>
 
-        <button onClick={() => setLayoutMode(!layoutMode)} className={`px-3 py-1 rounded text-sm ${layoutMode ? 'bg-green-600' : 'bg-gray-600'}`}>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setLayoutMode(!layoutMode)}
+          className="px-3 py-1 rounded text-sm cursor-pointer"
+          style={{
+            backgroundColor: layoutMode ? "var(--green)" : "var(--gray)",
+            color: "var(--white)",
+          }}
+        >
           {layoutMode ? "Layout Mode" : "Layout"}
-        </button>
-        <button onClick={() => { setSwapMode(!swapMode); swapFirstFrameRef.current = null; if (!swapMode) setSelectedFrame(null); }} className={`px-3 py-1 rounded text-sm ${swapMode ? 'bg-yellow-600' : 'bg-gray-600'}`}>
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => { setSwapMode(!swapMode); swapFirstFrameRef.current = null; if (!swapMode) setSelectedFrame(null); }}
+          className="px-3 py-1 rounded text-sm cursor-pointer"
+          style={{
+            backgroundColor: swapMode ? "var(--yellow)" : "var(--gray)",
+            color: "var(--white)",
+          }}
+        >
           {swapMode ? "Swapping (click two frames)" : "Swap Media"}
-        </button>
+        </motion.button>
 
         <div className="ml-auto flex gap-2">
           <input type="file" accept="audio/*" onChange={handleBgAudioUpload} className="hidden" id="bg-audio-upload" />
-          <label htmlFor="bg-audio-upload" className="px-3 py-1 bg-gray-600 rounded text-sm cursor-pointer">Background Audio</label>
-          <button onClick={exportVideo} className="px-3 py-1 bg-yellow-600 rounded text-sm">Export</button>
+          <motion.label
+            htmlFor="bg-audio-upload"
+            className="file-upload-label"
+            style={{ backgroundColor: "var(--gray)" }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <FaMusic /> Background Audio
+          </motion.label>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={exportVideo}
+            className="px-3 py-1 rounded text-sm cursor-pointer"
+            style={{ backgroundColor: "var(--yellow)", color: "var(--black)" }}
+          >
+            Export
+          </motion.button>
         </div>
       </div>
 
       {/* Canvas */}
-      <div className="flex-1 flex items-center justify-center bg-black relative">
-        <canvas ref={canvasRef} width={canvasSize.width} height={canvasSize.height} className="max-w-full max-h-full object-contain"
-          onMouseDown={handleCanvasMouseDown} onMouseMove={handleCanvasMouseMove} onMouseUp={handleCanvasMouseUp} onMouseLeave={handleCanvasMouseUp}
-          onClick={handleCanvasClick} onContextMenu={handleCanvasContextMenu} />
+      <div className="flex-1 flex items-center justify-center relative" style={{ backgroundColor: "var(--black)" }}>
+        <canvas
+          ref={canvasRef}
+          width={canvasSize.width}
+          height={canvasSize.height}
+          className="max-w-full max-h-full object-contain"
+          onMouseDown={handleCanvasMouseDown}
+          onMouseMove={handleCanvasMouseMove}
+          onMouseUp={handleCanvasMouseUp}
+          onMouseLeave={handleCanvasMouseUp}
+          onClick={handleCanvasClick}
+          onContextMenu={handleCanvasContextMenu}
+        />
       </div>
 
       {/* Playback controls */}
-      <div className="p-2 bg-gray-800 border-t border-gray-700 flex items-center gap-4">
-        <button onClick={isPlaying ? stopPlayback : startPlayback} className="px-4 py-1 bg-green-600 rounded text-sm">{isPlaying ? "Pause" : "Play"}</button>
-        <span className="text-sm">{currentTime.toFixed(2)}s / {projectDuration.toFixed(2)}s</span>
-        <input type="range" min={0} max={projectDuration || 0} step={0.01} value={currentTime} onChange={(e) => {
-          const t = Number(e.target.value); setCurrentTime(t);
-          if (!isPlaying) {
-            elements.forEach(el => { if (!el.sourceVideoId) return; const v = getVideoElement(el.sourceVideoId); if (v) v.currentTime = el.trimStart + t; });
-            drawStaticPreview();
-          }
-        }} className="flex-1" />
+      <div
+        className="p-2 flex items-center gap-4 border-t"
+        style={{ backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)" }}
+      >
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={isPlaying ? stopPlayback : startPlayback}
+          className="px-4 py-1 rounded text-sm cursor-pointer"
+          style={{ backgroundColor: "var(--green)", color: "var(--white)" }}
+        >
+          {isPlaying ? <FaPause /> : <FaPlay />}
+        </motion.button>
+        <span className="text-sm" style={{ color: "var(--black)" }}>
+          {currentTime.toFixed(2)}s / {projectDuration.toFixed(2)}s
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={projectDuration || 0}
+          step={0.01}
+          value={currentTime}
+          onChange={(e) => {
+            const t = Number(e.target.value); setCurrentTime(t);
+            if (!isPlaying) {
+              elements.forEach(el => { if (!el.sourceVideoId) return; const v = getVideoElement(el.sourceVideoId); if (v) v.currentTime = el.trimStart + t; });
+              drawStaticPreview();
+            }
+          }}
+          className="flex-1"
+        />
       </div>
 
       {/* Background Audio Timeline + Trim */}
       {backgroundAudio && backgroundAudio.waveform && (
-        <div className="bg-gray-800 p-2 border-t border-gray-700">
-          <div className="flex items-center gap-2 text-xs mb-1">
+        <div className="p-2 border-t" style={{ backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)" }}>
+          <div className="flex items-center gap-2 text-xs mb-1" style={{ color: "var(--black)" }}>
             <span className="truncate max-w-[150px]">{backgroundAudio.file.name}</span>
             <label>Start: <input type="range" min={0} max={backgroundAudio.duration} step={0.1} value={backgroundAudio.trimStart} onChange={(e) => { const v = Number(e.target.value); setBackgroundAudio(prev => ({ ...prev, trimStart: Math.min(v, prev.trimEnd - 0.1) })); }} className="w-20" /> {backgroundAudio.trimStart.toFixed(1)}s</label>
             <label>End: <input type="range" min={0} max={backgroundAudio.duration} step={0.1} value={backgroundAudio.trimEnd} onChange={(e) => { const v = Number(e.target.value); setBackgroundAudio(prev => ({ ...prev, trimEnd: Math.max(v, prev.trimStart + 0.1) })); }} className="w-20" /> {backgroundAudio.trimEnd.toFixed(1)}s</label>
-            <span className="text-gray-400">({backgroundAudio.duration.toFixed(1)}s total)</span>
+            <span style={{ color: "var(--gray)" }}>({backgroundAudio.duration.toFixed(1)}s total)</span>
           </div>
-          <div className="relative h-6 bg-gray-700 rounded overflow-hidden">
+          <div className="relative h-6 rounded overflow-hidden" style={{ backgroundColor: "var(--gray)" }}>
             <AudioWaveform waveformData={backgroundAudio.waveform} width={800} height={24} />
-            <div className="absolute top-0 bottom-0 bg-yellow-500/30" style={{ left: `${(backgroundAudio.trimStart / backgroundAudio.duration) * 100}%`, width: `${((backgroundAudio.trimEnd - backgroundAudio.trimStart) / backgroundAudio.duration) * 100}%` }} />
+            <div className="absolute top-0 bottom-0" style={{ left: `${(backgroundAudio.trimStart / backgroundAudio.duration) * 100}%`, width: `${((backgroundAudio.trimEnd - backgroundAudio.trimStart) / backgroundAudio.duration) * 100}%`, backgroundColor: "rgba(255,255,0,0.3)" }} />
           </div>
         </div>
       )}
 
       {/* Trim panel */}
       {selectedFrame !== null && !layoutMode && !swapMode && selectedSourceVideo && (
-        <div className="bg-gray-800 p-2 flex flex-wrap gap-4 items-center text-xs border-t border-gray-700">
-          <span className="truncate max-w-[150px]">{selectedSourceVideo.file?.name}</span>
-          <label>Start: <input type="range" min={0} max={selectedSourceVideo.duration} step={0.1} value={trimStart} onChange={(e) => { const v = Number(e.target.value); setTrimStart(v); handleTrimChange('start', v); }} className="w-24 ml-1" /> {trimStart.toFixed(1)}s</label>
-          <label>End: <input type="range" min={0} max={selectedSourceVideo.duration} step={0.1} value={trimEnd} onChange={(e) => { const v = Number(e.target.value); setTrimEnd(v); handleTrimChange('end', v); }} className="w-24 ml-1" /> {trimEnd.toFixed(1)}s</label>
-          <span className="text-gray-400">({selectedSourceVideo.duration.toFixed(1)}s full)</span>
+        <div className="p-2 flex flex-wrap gap-4 items-center text-xs border-t" style={{ backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)" }}>
+          <span className="truncate max-w-[150px]" style={{ color: "var(--black)" }}>{selectedSourceVideo.file?.name}</span>
+          <label style={{ color: "var(--black)" }}>Start: <input type="range" min={0} max={selectedSourceVideo.duration} step={0.1} value={trimStart} onChange={(e) => { const v = Number(e.target.value); setTrimStart(v); handleTrimChange('start', v); }} className="w-24 ml-1" /> {trimStart.toFixed(1)}s</label>
+          <label style={{ color: "var(--black)" }}>End: <input type="range" min={0} max={selectedSourceVideo.duration} step={0.1} value={trimEnd} onChange={(e) => { const v = Number(e.target.value); setTrimEnd(v); handleTrimChange('end', v); }} className="w-24 ml-1" /> {trimEnd.toFixed(1)}s</label>
+          <span style={{ color: "var(--gray)" }}>({selectedSourceVideo.duration.toFixed(1)}s full)</span>
         </div>
       )}
 
       {/* Pan/zoom panel */}
       {selectedFrame !== null && !layoutMode && !swapMode && (
-        <div className="bg-gray-800 p-2 flex flex-wrap gap-4 items-center text-xs border-t border-gray-700">
-          <span>Pan: drag inside frame</span>
-          <label>Zoom: <input type="range" min={0.5} max={3} step={0.01} value={selectedPanZoom.zoom} onChange={(e) => setPanZoom(prev => ({ ...prev, [selectedFrame]: { ...prev[selectedFrame], zoom: parseFloat(e.target.value) } }))} className="w-32 ml-2" /> {selectedPanZoom.zoom.toFixed(2)}x</label>
-          <button onClick={() => setPanZoom(prev => ({ ...prev, [selectedFrame]: { offsetX: 0, offsetY: 0, zoom: 1 } }))} className="px-2 py-1 bg-gray-600 rounded">Reset</button>
+        <div className="p-2 flex flex-wrap gap-4 items-center text-xs border-t" style={{ backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)" }}>
+          <span style={{ color: "var(--black)" }}>Pan: drag inside frame</span>
+          <label style={{ color: "var(--black)" }}>Zoom: <input type="range" min={0.5} max={3} step={0.01} value={selectedPanZoom.zoom} onChange={(e) => setPanZoom(prev => ({ ...prev, [selectedFrame]: { ...prev[selectedFrame], zoom: parseFloat(e.target.value) } }))} className="w-32 ml-2" /> {selectedPanZoom.zoom.toFixed(2)}x</label>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setPanZoom(prev => ({ ...prev, [selectedFrame]: { offsetX: 0, offsetY: 0, zoom: 1 } }))}
+            className="px-2 py-1 rounded cursor-pointer"
+            style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+          >
+            Reset
+          </motion.button>
         </div>
       )}
 
       {/* Layout controls */}
       {layoutMode && selectedFrame !== null && (
-        <div className="bg-gray-800 p-2 flex flex-wrap gap-2 text-xs border-t border-gray-700">
-          <label>Left % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.x || 0) * 100)} onChange={(e) => setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, x: Number(e.target.value) / 100 } } : el))} className="w-16 bg-gray-700 p-1 rounded" /></label>
-          <label>Top % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.y || 0) * 100)} onChange={(e) => setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, y: Number(e.target.value) / 100 } } : el))} className="w-16 bg-gray-700 p-1 rounded" /></label>
-          <label>Width % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.w || 0) * 100)} onChange={(e) => setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, w: Number(e.target.value) / 100 } } : el))} className="w-16 bg-gray-700 p-1 rounded" /></label>
-          <label>Height % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.h || 0) * 100)} onChange={(e) => setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, h: Number(e.target.value) / 100 } } : el))} className="w-16 bg-gray-700 p-1 rounded" /></label>
+        <div className="p-2 flex flex-wrap gap-2 text-xs border-t" style={{ backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)" }}>
+          <label style={{ color: "var(--black)" }}>Left % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.x || 0) * 100)} onChange={(e) => setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, x: Number(e.target.value) / 100 } } : el))} className="w-16 p-1 rounded" style={{ backgroundColor: "var(--white)", color: "var(--black)" }} /></label>
+          <label style={{ color: "var(--black)" }}>Top % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.y || 0) * 100)} onChange={(e) => setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, y: Number(e.target.value) / 100 } } : el))} className="w-16 p-1 rounded" style={{ backgroundColor: "var(--white)", color: "var(--black)" }} /></label>
+          <label style={{ color: "var(--black)" }}>Width % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.w || 0) * 100)} onChange={(e) => setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, w: Number(e.target.value) / 100 } } : el))} className="w-16 p-1 rounded" style={{ backgroundColor: "var(--white)", color: "var(--black)" }} /></label>
+          <label style={{ color: "var(--black)" }}>Height % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.h || 0) * 100)} onChange={(e) => setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, h: Number(e.target.value) / 100 } } : el))} className="w-16 p-1 rounded" style={{ backgroundColor: "var(--white)", color: "var(--black)" }} /></label>
         </div>
       )}
 
       {/* Context menu */}
       {contextMenu && (
-        <div className="fixed bg-gray-700 border border-gray-600 rounded shadow-lg py-1 text-sm z-50" style={{ left: contextMenu.x, top: contextMenu.y }}>
-          <button onClick={deleteFrameClip} className="block w-full text-left px-4 py-1 hover:bg-gray-600">Delete Clip</button>
-          <button onClick={replaceFrameClip} className="block w-full text-left px-4 py-1 hover:bg-gray-600">Replace Clip</button>
+        <div className="fixed border rounded shadow-lg py-1 text-sm z-50" style={{ left: contextMenu.x, top: contextMenu.y, backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)" }}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={deleteFrameClip}
+            className="block w-full text-left px-4 py-1"
+            style={{ color: "var(--black)" }}
+          >
+            Delete Clip
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={replaceFrameClip}
+            className="block w-full text-left px-4 py-1"
+            style={{ color: "var(--black)" }}
+          >
+            Replace Clip
+          </motion.button>
         </div>
       )}
 
       {/* Export Modal */}
       {(exporting || exportDone || exportError) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-          <div className="bg-gray-800 rounded-xl p-6 w-96 max-w-full text-center space-y-4">
+          <div className="rounded-xl p-6 w-96 max-w-full text-center space-y-4" style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}>
             {exportError ? (
               <>
-                <h3 className="text-lg font-semibold text-red-400">Export Error</h3>
+                <h3 className="text-lg font-semibold" style={{ color: "var(--red)" }}>Export Error</h3>
                 <p className="text-sm">{exportError}</p>
-                <button onClick={closeModal} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-sm">Close</button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={closeModal}
+                  className="px-4 py-2 rounded text-sm cursor-pointer"
+                  style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+                >
+                  Close
+                </motion.button>
               </>
             ) : exportDone && exportBlob ? (
               <>
-                <h3 className="text-lg font-semibold text-green-400">Export Complete</h3>
+                <h3 className="text-lg font-semibold" style={{ color: "var(--green)" }}>Export Complete</h3>
                 <p className="text-sm">Preview:</p>
                 <video src={URL.createObjectURL(exportBlob)} controls className="w-full rounded" style={{ maxHeight: '200px' }} />
                 <div className="flex flex-col gap-2">
-                  <button onClick={downloadBlob} className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-sm">Download Video</button>
-                  <button onClick={closeModal} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-sm">Close</button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={downloadBlob}
+                    className="px-4 py-2 rounded text-sm cursor-pointer"
+                    style={{ backgroundColor: "var(--green)", color: "var(--white)" }}
+                  >
+                    Download Video
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={closeModal}
+                    className="px-4 py-2 rounded text-sm cursor-pointer"
+                    style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+                  >
+                    Close
+                  </motion.button>
                 </div>
               </>
             ) : (
               <>
                 <h3 className="text-lg font-semibold">Exporting Video</h3>
-                <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
-                  <div className="bg-blue-500 h-4 rounded-full transition-all" style={{ width: `${exportProgress}%` }} />
+                <div className="w-full rounded-full h-4 overflow-hidden" style={{ backgroundColor: "var(--gray)" }}>
+                  <div className="h-4 rounded-full transition-all" style={{ width: `${exportProgress}%`, backgroundColor: "var(--blue)" }} />
                 </div>
                 <p className="text-sm">{exportProgress}%</p>
-                <button onClick={cancelExport} className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm">Cancel Export</button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={cancelExport}
+                  className="px-4 py-2 rounded text-sm cursor-pointer"
+                  style={{ backgroundColor: "var(--red)", color: "var(--white)" }}
+                >
+                  Cancel Export
+                </motion.button>
               </>
             )}
           </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import { FaImages } from "react-icons/fa";
 
 const CANVAS_PRESETS = {
   "1:1 (1080x1080)": { width: 1080, height: 1080 },
@@ -387,31 +389,83 @@ export default function PhotoCollageEditor() {
   const selectedPanZoom = selectedFrame !== null ? getPanZoom(selectedFrame) : { offsetX: 0, offsetY: 0, zoom: 1 };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-white" onContextMenu={(e) => e.preventDefault()}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: "var(--white)", color: "var(--black)" }}>
       {/* Toolbar */}
-      <div className="p-3 bg-gray-800 flex flex-wrap gap-3 items-center border-b border-gray-700">
+      <div
+        className="p-3 flex flex-wrap gap-3 items-center border-b"
+        style={{ backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)" }}
+      >
         <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" id="photo-upload" />
-        <label htmlFor="photo-upload" className="px-3 py-1 bg-blue-600 rounded text-sm cursor-pointer">Add Photos</label>
+        <motion.label
+          htmlFor="photo-upload"
+          className="file-upload-label"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <FaImages /> Add Photos
+        </motion.label>
 
-        <select value={preset?.name} onChange={(e) => applyPreset(PRESETS.find(p => p.name === e.target.value) || PRESETS[0])} className="bg-gray-700 rounded px-2 py-1 text-sm">
+        <select
+          value={preset?.name}
+          onChange={(e) => applyPreset(PRESETS.find(p => p.name === e.target.value) || PRESETS[0])}
+          className="rounded px-2 py-1 text-sm cursor-pointer"
+          style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+        >
           {PRESETS.map(p => <option key={p.name}>{p.name}</option>)}
         </select>
 
-        <select value={canvasSizeKey} onChange={(e) => setCanvasSizeKey(e.target.value)} className="bg-gray-700 rounded px-2 py-1 text-sm">
+        <select
+          value={canvasSizeKey}
+          onChange={(e) => setCanvasSizeKey(e.target.value)}
+          className="rounded px-2 py-1 text-sm cursor-pointer"
+          style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+        >
           {Object.keys(CANVAS_PRESETS).map(key => <option key={key}>{key}</option>)}
         </select>
 
-        <button onClick={() => setLayoutMode(!layoutMode)} className={`px-3 py-1 rounded text-sm ${layoutMode ? 'bg-green-600' : 'bg-gray-600'}`}>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setLayoutMode(!layoutMode)}
+          className="px-3 py-1 rounded text-sm cursor-pointer"
+          style={{
+            backgroundColor: layoutMode ? "var(--green)" : "var(--gray)",
+            color: "var(--white)",
+          }}
+        >
           {layoutMode ? "Layout Mode" : "Layout"}
-        </button>
-        <button onClick={() => { setSwapMode(!swapMode); swapFirstFrameRef.current = null; if (!swapMode) setSelectedFrame(null); }} className={`px-3 py-1 rounded text-sm ${swapMode ? 'bg-yellow-600' : 'bg-gray-600'}`}>
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            setSwapMode(!swapMode);
+            swapFirstFrameRef.current = null;
+            if (!swapMode) setSelectedFrame(null);
+          }}
+          className="px-3 py-1 rounded text-sm cursor-pointer"
+          style={{
+            backgroundColor: swapMode ? "var(--yellow)" : "var(--gray)",
+            color: "var(--white)",
+          }}
+        >
           {swapMode ? "Swapping (click two frames)" : "Swap Media"}
-        </button>
-        <button onClick={exportCollage} className="px-3 py-1 bg-yellow-600 rounded text-sm ml-auto">Export PNG</button>
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={exportCollage}
+          className="px-3 py-1 rounded text-sm ml-auto cursor-pointer"
+          style={{ backgroundColor: "var(--yellow)", color: "var(--black)" }}
+        >
+          Export PNG
+        </motion.button>
       </div>
 
       {/* Canvas */}
-      <div className="flex-1 flex items-center justify-center bg-black relative">
+      <div className="flex-1 flex items-center justify-center relative" style={{ backgroundColor: "var(--white)" }}>
         <canvas
           ref={canvasRef}
           width={canvasSize.width}
@@ -428,58 +482,225 @@ export default function PhotoCollageEditor() {
 
       {/* Pan/zoom panel */}
       {selectedFrame !== null && !layoutMode && !swapMode && (
-        <div className="bg-gray-800 p-2 flex flex-wrap gap-4 items-center text-xs border-t border-gray-700">
+        <div
+          className="p-2 flex flex-wrap gap-4 items-center text-xs border-t"
+          style={{ backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)", color: "var(--black)" }}
+        >
           <span>Pan: drag inside frame</span>
-          <label>Zoom:
-            <input type="range" min={0.5} max={3} step={0.01} value={selectedPanZoom.zoom} onChange={(e) => { const val = parseFloat(e.target.value); setPanZoom(prev => ({ ...prev, [selectedFrame]: { ...prev[selectedFrame], zoom: val } })); }} className="w-32 ml-2" />
+          <label>
+            Zoom:
+            <input
+              type="range"
+              min={0.5}
+              max={3}
+              step={0.01}
+              value={selectedPanZoom.zoom}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                setPanZoom(prev => ({
+                  ...prev,
+                  [selectedFrame]: { ...prev[selectedFrame], zoom: val },
+                }));
+              }}
+              className="w-32 ml-2"
+            />
             <span className="ml-1">{selectedPanZoom.zoom.toFixed(2)}x</span>
           </label>
-          <button onClick={() => setPanZoom(prev => ({ ...prev, [selectedFrame]: { offsetX: 0, offsetY: 0, zoom: 1 } }))} className="px-2 py-1 bg-gray-600 rounded">Reset</button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() =>
+              setPanZoom(prev => ({
+                ...prev,
+                [selectedFrame]: { offsetX: 0, offsetY: 0, zoom: 1 },
+              }))
+            }
+            className="px-2 py-1 rounded cursor-pointer"
+            style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+          >
+            Reset
+          </motion.button>
         </div>
       )}
 
       {/* Layout controls */}
       {layoutMode && selectedFrame !== null && (
-        <div className="bg-gray-800 p-2 flex flex-wrap gap-2 text-xs border-t border-gray-700">
-          <label>Left % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.x || 0) * 100)} onChange={(e) => { const val = Number(e.target.value) / 100; setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, x: val } } : el)); }} className="w-16 bg-gray-700 p-1 rounded" /></label>
-          <label>Top % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.y || 0) * 100)} onChange={(e) => { const val = Number(e.target.value) / 100; setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, y: val } } : el)); }} className="w-16 bg-gray-700 p-1 rounded" /></label>
-          <label>Width % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.w || 0) * 100)} onChange={(e) => { const val = Number(e.target.value) / 100; setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, w: val } } : el)); }} className="w-16 bg-gray-700 p-1 rounded" /></label>
-          <label>Height % <input type="number" value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.h || 0) * 100)} onChange={(e) => { const val = Number(e.target.value) / 100; setElements(prev => prev.map(el => el.frameIdx === selectedFrame ? { ...el, transform: { ...el.transform, h: val } } : el)); }} className="w-16 bg-gray-700 p-1 rounded" /></label>
+        <div
+          className="p-2 flex flex-wrap gap-2 text-xs border-t"
+          style={{ backgroundColor: "var(--lightgray)", borderColor: "var(--darkgray)", color: "var(--black)" }}
+        >
+          <label>
+            Left %
+            <input
+              type="number"
+              value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.x || 0) * 100)}
+              onChange={(e) => {
+                const val = Number(e.target.value) / 100;
+                setElements(prev =>
+                  prev.map(el =>
+                    el.frameIdx === selectedFrame
+                      ? { ...el, transform: { ...el.transform, x: val } }
+                      : el
+                  )
+                );
+              }}
+              className="w-16 p-1 rounded"
+              style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+            />
+          </label>
+          <label>
+            Top %
+            <input
+              type="number"
+              value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.y || 0) * 100)}
+              onChange={(e) => {
+                const val = Number(e.target.value) / 100;
+                setElements(prev =>
+                  prev.map(el =>
+                    el.frameIdx === selectedFrame
+                      ? { ...el, transform: { ...el.transform, y: val } }
+                      : el
+                  )
+                );
+              }}
+              className="w-16 p-1 rounded"
+              style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+            />
+          </label>
+          <label>
+            Width %
+            <input
+              type="number"
+              value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.w || 0) * 100)}
+              onChange={(e) => {
+                const val = Number(e.target.value) / 100;
+                setElements(prev =>
+                  prev.map(el =>
+                    el.frameIdx === selectedFrame
+                      ? { ...el, transform: { ...el.transform, w: val } }
+                      : el
+                  )
+                );
+              }}
+              className="w-16 p-1 rounded"
+              style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+            />
+          </label>
+          <label>
+            Height %
+            <input
+              type="number"
+              value={Math.round((elements.find(e => e.frameIdx === selectedFrame)?.transform.h || 0) * 100)}
+              onChange={(e) => {
+                const val = Number(e.target.value) / 100;
+                setElements(prev =>
+                  prev.map(el =>
+                    el.frameIdx === selectedFrame
+                      ? { ...el, transform: { ...el.transform, h: val } }
+                      : el
+                  )
+                );
+              }}
+              className="w-16 p-1 rounded"
+              style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+            />
+          </label>
         </div>
       )}
 
       {/* Context menu */}
       {contextMenu && (
-        <div className="fixed bg-gray-700 border border-gray-600 rounded shadow-lg py-1 text-sm z-50" style={{ left: contextMenu.x, top: contextMenu.y }}>
-          <button onClick={deleteFramePhoto} className="block w-full text-left px-4 py-1 hover:bg-gray-600">Delete Photo</button>
-          <button onClick={replaceFramePhoto} className="block w-full text-left px-4 py-1 hover:bg-gray-600">Replace Photo</button>
+        <div
+          className="fixed border rounded shadow-lg py-1 text-sm z-50"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
+            backgroundColor: "var(--lightgray)",
+            borderColor: "var(--darkgray)",
+          }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={deleteFramePhoto}
+            className="block w-full text-left px-4 py-1"
+            style={{ color: "var(--black)" }}
+          >
+            Delete Photo
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={replaceFramePhoto}
+            className="block w-full text-left px-4 py-1"
+            style={{ color: "var(--black)" }}
+          >
+            Replace Photo
+          </motion.button>
         </div>
       )}
 
       {/* Export Modal */}
       {(exporting || exportBlob || exportError) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-          <div className="bg-gray-800 rounded-xl p-6 w-80 text-center space-y-4">
+          <div
+            className="rounded-xl p-6 w-80 text-center space-y-4"
+            style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}
+          >
             {exportError ? (
               <>
-                <h3 className="text-lg font-semibold text-red-400">Export Error</h3>
+                <h3 className="text-lg font-semibold" style={{ color: "var(--red)" }}>
+                  Export Error
+                </h3>
                 <p className="text-sm">{exportError}</p>
-                <button onClick={closeModal} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-sm">Close</button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={closeModal}
+                  className="px-4 py-2 rounded text-sm cursor-pointer"
+                  style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+                >
+                  Close
+                </motion.button>
               </>
             ) : exportBlob ? (
               <>
-                <h3 className="text-lg font-semibold text-green-400">Export Complete</h3>
+                <h3 className="text-lg font-semibold" style={{ color: "var(--green)" }}>
+                  Export Complete
+                </h3>
                 <p className="text-sm">Your collage is ready.</p>
                 <div className="flex flex-col gap-2">
-                  <button onClick={downloadBlob} className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-sm">Download PNG</button>
-                  <button onClick={closeModal} className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-sm">Close</button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={downloadBlob}
+                    className="px-4 py-2 rounded text-sm cursor-pointer"
+                    style={{ backgroundColor: "var(--green)", color: "var(--white)" }}
+                  >
+                    Download PNG
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={closeModal}
+                    className="px-4 py-2 rounded text-sm cursor-pointer"
+                    style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+                  >
+                    Close
+                  </motion.button>
                 </div>
               </>
             ) : (
               <>
                 <h3 className="text-lg font-semibold">Exporting...</h3>
-                <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
-                  <div className="bg-blue-500 h-4 rounded-full animate-pulse w-full" />
+                <div
+                  className="w-full rounded-full h-4 overflow-hidden"
+                  style={{ backgroundColor: "var(--gray)" }}
+                >
+                  <div
+                    className="h-4 rounded-full animate-pulse w-full"
+                    style={{ backgroundColor: "var(--blue)" }}
+                  />
                 </div>
                 <p className="text-sm">Generating image...</p>
               </>

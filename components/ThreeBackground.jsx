@@ -8,7 +8,6 @@ function AnimatedBlob() {
   const meshRef = useRef();
   const { theme } = useContext(AppContext);
 
-  // React to mouse movement
   useFrame(({ mouse }) => {
     if (meshRef.current) {
       meshRef.current.rotation.x += (mouse.y * 0.5 - meshRef.current.rotation.x) * 0.1;
@@ -16,13 +15,12 @@ function AnimatedBlob() {
     }
   });
 
-  // Dynamic colour based on selected theme
   const getColor = () => {
     switch (theme) {
       case 'dark': return '#4f46e5';
       case 'cyberpunk': return '#ff007f';
       case 'nature': return '#047857';
-      default: return '#2563eb'; // light
+      default: return '#2563eb';
     }
   };
 
@@ -34,6 +32,8 @@ function AnimatedBlob() {
         speed={2}
         roughness={0.5}
         metalness={0.1}
+        transparent
+        opacity={0.8}
       />
     </Sphere>
   );
@@ -41,8 +41,12 @@ function AnimatedBlob() {
 
 export default function ThreeBackground() {
   return (
-    <div className="fixed inset-0 -z-10 opacity-30">
-      <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+    <div className="fixed inset-0 -z-10 pointer-events-none" style={{ opacity: 0.35 }}>
+      <Canvas
+        camera={{ position: [0, 0, 5], fov: 50 }}
+        gl={{ alpha: true, antialias: true }}
+        style={{ background: 'transparent' }}
+      >
         <ambientLight intensity={0.5} />
         <directionalLight position={[2, 2, 5]} intensity={1} />
         <AnimatedBlob />

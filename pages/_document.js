@@ -3,11 +3,9 @@ import { Html, Head, Main, NextScript } from 'next/document';
 
 export default function Document() {
   return (
-    <Html>
-      <Head>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <body className="bg-bg text-text">
+    <Html data-theme="light" style={{ backgroundColor: '#ffffff' }}>
+      <Head />
+      <body style={{ backgroundColor: '#ffffff', margin: 0, minHeight: '100vh' }}>
         <Main />
         <NextScript />
       </body>

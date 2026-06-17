@@ -1,124 +1,128 @@
 // pages/index.js
 import { useContext, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
+import { motion } from "framer-motion";
 import { AppContext } from "./_app";
 import ThemePicker from "../components/ThemePicker";
 import EditorWorkspace from "../components/EditorWorkspace";
+import { FaCamera, FaVideo, FaMusic, FaExchangeAlt, FaImages, FaFilm, FaCompress } from "react-icons/fa";
 
-// Dynamically import 3D component (SSR disabled)
-const ThreeBackground = dynamic(() => import("../components/ThreeBackground"), {
-  ssr: false,
-});
+const ThreeBackground = dynamic(() => import("../components/ThreeBackground"), { ssr: false });
 
 export default function Home() {
   const { activeEditor, setActiveEditor } = useContext(AppContext);
   const editorContainerRef = useRef(null);
 
-  // Launch an editor (triggered by user click) and request fullscreen
   const launchEditor = useCallback(
     (type) => {
       setActiveEditor(type);
       if (editorContainerRef.current) {
         editorContainerRef.current.classList.remove("hidden");
       }
-      // Request fullscreen on the entire document (hides browser UI)
       document.documentElement.requestFullscreen().catch((err) => {
-        console.warn(
-          "Auto fullscreen failed – use the button inside the editor.",
-          err,
-        );
+        console.warn("Auto fullscreen failed – use the button inside the editor.", err);
       });
     },
-    [setActiveEditor],
+    [setActiveEditor]
   );
 
-  // Exit editor (called only from the "Exit Editor" button)
   const exitEditor = () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    }
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     setActiveEditor(null);
-    if (editorContainerRef.current) {
-      editorContainerRef.current.classList.add("hidden");
-    }
+    if (editorContainerRef.current) editorContainerRef.current.classList.add("hidden");
   };
 
+  const buttonVariants = {
+    hover: { scale: 1.05, transition: { type: "spring", stiffness: 300 } },
+    tap: { scale: 0.95 },
+  };
+
+  const editors = [
+    { label: "Photo Editor", icon: <FaCamera />, type: "photo" },
+    { label: "Video Combinor", icon: <FaVideo />, type: "video" },
+    { label: "Audio Editor", icon: <FaMusic />, type: "audio" },
+    { label: "Video to Audio", icon: <FaExchangeAlt />, type: "video-to-audio" },
+    { label: "Photo Collage", icon: <FaImages />, type: "photo-collage" },
+    { label: "Video Collage", icon: <FaFilm />, type: "video-collage" },
+    { label: "Media Compressor", icon: <FaCompress />, type: "media-compressor" },
+  ];
+
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* 3D Background – always visible behind everything */}
+    <div
+      className="relative min-h-screen overflow-hidden"
+      style={{ backgroundColor: "var(--white)" }}
+    >
       <ThreeBackground />
 
-      {/* Main Dashboard UI (hidden when an editor is active) */}
       <div
-        className={`relative z-10 flex flex-col items-center justify-center min-h-screen ${activeEditor ? "hidden" : ""}`}
+        className={`relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-8 ${
+          activeEditor ? "hidden" : ""
+        }`}
       >
-        <h1 className="text-5xl font-bold mb-8 text-primary drop-shadow-lg">
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-4xl sm:text-5xl mm:text-6xl font-bold mb-4"
+          style={{ color: "var(--black)" }}
+        >
           Creative Studio
-        </h1>
-        <p className="text-lg text-muted mb-12 max-w-2xl text-center">
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="text-base mm:text-lg mb-8 max-w-2xl text-center"
+          style={{ color: "var(--gray)" }}
+        >
           A free, browser‑based media editor with photo, video and audio tools.
           Pick your theme and dive into full‑screen editing.
-        </p>
+        </motion.p>
 
-        {/* Launch buttons */}
-        <div className="flex flex-wrap gap-4 mb-8 justify-center">
-          <button
-            onClick={() => launchEditor("photo")}
-            className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-105 transition-transform font-semibold"
-          >
-            📷 Photo Editor
-          </button>
-          <button
-            onClick={() => launchEditor("video")}
-            className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-105 transition-transform font-semibold"
-          >
-            🎬 Video Combinor
-          </button>
-          <button
-            onClick={() => launchEditor("audio")}
-            className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-105 transition-transform font-semibold"
-          >
-            🎵 Audio Editor
-          </button>
-          <button
-            onClick={() => launchEditor("video-to-audio")}
-            className="px-6 py-3 bg-accent text-white rounded-2xl shadow-lg hover:scale-105 transition-transform font-semibold"
-          >
-            🎬➡🎵 Video to Audio
-          </button>
-          <button
-            onClick={() => launchEditor("photo-collage")}
-            className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-105 transition-transform font-semibold"
-          >
-            📷 Photo Collage
-          </button>
-          <button
-            onClick={() => launchEditor("video-collage")}
-            className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-105 transition-transform font-semibold"
-          >
-            🎬 Video Collage
-          </button>
-          <button
-  onClick={() => launchEditor('media-compressor')}
-  className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg hover:scale-105 transition-transform font-semibold"
->
-  📦 Media Compressor
-</button>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="flex flex-wrap gap-3 justify-center mb-6"
+        >
+          {editors.map((btn) => (
+            <motion.button
+              key={btn.type}
+              onClick={() => launchEditor(btn.type)}
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              className="px-4 py-2 mm:px-6 mm:py-3 rounded-2xl shadow-lg font-semibold cursor-pointer flex items-center gap-2"
+              style={{
+                backgroundColor: btn.type === "video-to-audio" ? "var(--yellow)" : "var(--blue)",
+                color: btn.type === "video-to-audio" ? "var(--black)" : "var(--white)",
+              }}
+            >
+              {btn.icon} {btn.label}
+            </motion.button>
+          ))}
+        </motion.div>
 
-        <ThemePicker />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="w-full max-w-md"
+        >
+          <ThemePicker />
+        </motion.div>
       </div>
 
-      {/* Fullscreen Editor Container – hidden when no editor active */}
-      {/* Fullscreen Editor Container */}
       <div
         ref={editorContainerRef}
-        className={`fixed inset-0 z-50 bg-bg ${activeEditor ? "" : "hidden"}`}
-        style={{ width: "100vw", height: "100vh" }}
+        className={`fixed inset-0 z-50 ${activeEditor ? "" : "hidden"}`}
+        style={{
+          backgroundColor: "var(--white)",
+          width: "100vw",
+          height: "100vh",
+        }}
       >
-        {activeEditor && (
-          <EditorWorkspace type={activeEditor} onExit={exitEditor} />
-        )}
+        {activeEditor && <EditorWorkspace type={activeEditor} onExit={exitEditor} />}
       </div>
     </div>
   );

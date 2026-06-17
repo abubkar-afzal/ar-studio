@@ -3,6 +3,9 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
+import { motion } from "framer-motion";
+import { FaVideo, FaMusic, FaPlay, FaPause, FaExpand, FaCompress, FaUndo, FaRedo, FaTrash, FaExchangeAlt } from "react-icons/fa";
+import { generateThumbnail, formatDuration } from "../utils/generateThumbnail";
 
 // ---------- Constants ----------
 const PIXELS_PER_SECOND = 150;
@@ -253,7 +256,13 @@ export default function VideoCombiner() {
       video.src = url;
       video.preload = "metadata";
       await new Promise((resolve) => {
-        video.onloadedmetadata = () => {
+        video.onloadedmetadata = async () => {
+          let thumbnail = null;
+          try {
+            thumbnail = await generateThumbnail(file);
+          } catch (err) {
+            console.warn("Thumbnail generation failed", err);
+          }
           setSourceVideos((prev) => [
             ...prev,
             {
@@ -263,6 +272,7 @@ export default function VideoCombiner() {
               duration: video.duration,
               videoWidth: video.videoWidth,
               videoHeight: video.videoHeight,
+              thumbnail,
             },
           ]);
           resolve();
@@ -404,7 +414,7 @@ export default function VideoCombiner() {
     setDragType(null);
   };
 
-  // ---------- Export (fixed NaN & modal auto-close) ----------
+  // ---------- Export ----------
   const exportVideo = async () => {
     cancelledRef.current = false;
     setExporting(true);
@@ -421,7 +431,6 @@ export default function VideoCombiner() {
         await ffmpegRef.current.load();
       } catch (err) {
         setExportError("Failed to load FFmpeg. Please try again.");
-        // Keep modal open – do NOT set exporting=false here
         return;
       }
     }
@@ -465,7 +474,6 @@ export default function VideoCombiner() {
         cmd.push("-filter_complex", "[1:a]amix=inputs=2:duration=first:dropout_transition=2");
       }
 
-      // Fast encode
       cmd.push("-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "output.mp4");
 
       await ffmpeg.exec(cmd);
@@ -480,16 +488,13 @@ export default function VideoCombiner() {
       setExportError(null);
     } catch (err) {
       if (err.message === "cancelled") {
-        // Cancelled by user – close modal (set exporting false outside modal)
         setExporting(false);
       } else {
-        // Real error – show in modal
         setExportError("Export failed: " + (err.message || "Unknown error"));
-        setExportDone(true); // stop spinner, show error + close button
+        setExportDone(true);
       }
     } finally {
       ffmpeg.off("progress", onProgress);
-      // Don't automatically close; let the modal state handle it
     }
   };
 
@@ -589,64 +594,89 @@ export default function VideoCombiner() {
     input.click();
   };
 
+  // ---------- Render ----------
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 flex flex-col" onContextMenu={preventDefaultContextMenu}>
-
+    <div
+      className="min-h-screen p-4 flex flex-col"
+      style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+      onContextMenu={preventDefaultContextMenu}
+    >
       {/* Export Modal */}
       {exporting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-          <div className="bg-gray-800 rounded-xl p-6 w-80 text-center space-y-4">
+          <div
+            className="rounded-xl p-6 w-80 text-center space-y-4"
+            style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}
+          >
             {exportError ? (
-              // Error state
               <>
-                <h3 className="text-lg font-semibold text-red-400">Export Error</h3>
+                <h3 className="text-lg font-semibold" style={{ color: "var(--red)" }}>
+                  Export Error
+                </h3>
                 <p className="text-sm">{exportError}</p>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={closeExportModal}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-sm"
+                  className="px-4 py-2 rounded text-sm cursor-pointer"
+                  style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
                 >
                   Close
-                </button>
+                </motion.button>
               </>
             ) : !exportDone ? (
-              // In progress
               <>
                 <h3 className="text-lg font-semibold">Exporting Video</h3>
-                <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                <div
+                  className="w-full rounded-full h-4 overflow-hidden"
+                  style={{ backgroundColor: "var(--gray)" }}
+                >
                   <div
-                    className="bg-blue-500 h-4 rounded-full transition-all duration-300"
-                    style={{ width: `${exportProgress || 0}%` }}
+                    className="h-4 rounded-full transition-all duration-300"
+                    style={{ width: `${exportProgress || 0}%`, backgroundColor: "var(--blue)" }}
                   />
                 </div>
                 <p className="text-sm">{exportProgress || 0}%</p>
                 {exportETA !== null && exportETA > 0 && (
-                  <p className="text-xs text-gray-400">Estimated time left: {exportETA}s</p>
+                  <p className="text-xs" style={{ color: "var(--gray)" }}>
+                    Estimated time left: {exportETA}s
+                  </p>
                 )}
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={cancelExport}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm"
+                  className="px-4 py-2 rounded text-sm cursor-pointer"
+                  style={{ backgroundColor: "var(--red)", color: "var(--white)" }}
                 >
                   Cancel Export
-                </button>
+                </motion.button>
               </>
             ) : (
-              // Done (success)
               <>
-                <h3 className="text-lg font-semibold text-green-400">Export Complete</h3>
+                <h3 className="text-lg font-semibold" style={{ color: "var(--green)" }}>
+                  Export Complete
+                </h3>
                 <p className="text-sm">Your video is ready to download.</p>
                 <div className="flex flex-col gap-2">
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={downloadVideo}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-sm"
+                    className="px-4 py-2 rounded text-sm cursor-pointer"
+                    style={{ backgroundColor: "var(--green)", color: "var(--white)" }}
                   >
                     Download Video
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={closeExportModal}
-                    className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-sm"
+                    className="px-4 py-2 rounded text-sm cursor-pointer"
+                    style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
                   >
                     Close
-                  </button>
+                  </motion.button>
                 </div>
               </>
             )}
@@ -655,33 +685,55 @@ export default function VideoCombiner() {
       )}
 
       {/* Header */}
-      <header className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Video Combiner</h1>
-        <div className="flex items-center gap-4">
+      <header className="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <h1 className="text-2xl font-bold" style={{ color: "var(--black)" }}>
+          Video Combiner
+        </h1>
+        <div className="flex items-center gap-4 flex-wrap">
           <select
             value={aspectRatio}
             onChange={(e) => setAspectRatio(e.target.value)}
-            className="bg-gray-700 px-3 py-1 rounded text-sm"
+            className="px-3 py-1 rounded text-sm cursor-pointer"
+            style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
           >
             {Object.keys(ASPECT_RATIOS).map((key) => (
-              <option key={key} value={key}>{key} ({ASPECT_RATIOS[key].width}x{ASPECT_RATIOS[key].height})</option>
+              <option key={key} value={key}>
+                {key} ({ASPECT_RATIOS[key].width}x{ASPECT_RATIOS[key].height})
+              </option>
             ))}
           </select>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={exportVideo}
             disabled={exporting || clips.length === 0}
-            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded disabled:opacity-50"
+            className="px-4 py-2 rounded disabled:opacity-50 cursor-pointer"
+            style={{
+              backgroundColor: "var(--blue)",
+              color: "var(--white)",
+            }}
           >
             Export Video
-          </button>
+          </motion.button>
         </div>
       </header>
 
-      <div className="flex flex-1 gap-4">
-        {/* Left Panel */}
-        <div className="w-64 bg-gray-800 p-3 rounded space-y-4 overflow-y-auto">
+      <div className="flex flex-1 gap-4 flex-col t:flex-row">
+        {/* Left Panel - Source Videos with Thumbnails */}
+        <div
+          className="w-full t:w-64 p-3 rounded space-y-4 overflow-y-auto"
+          style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}
+        >
           <h2 className="font-semibold">Source Videos</h2>
-          <input type="file" accept="video/*" multiple onChange={handleImportVideo} className="text-sm" />
+          <input type="file" accept="video/*" multiple onChange={handleImportVideo} className="hidden" id="video-import" />
+<motion.label
+  htmlFor="video-import"
+  className="file-upload-label"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  <FaVideo /> Add Videos
+</motion.label>
           <div className="space-y-2">
             {sourceVideos.map((src) => (
               <SourceClip key={src.id} video={src} onAddToTimeline={addClipToTimeline} />
@@ -691,12 +743,16 @@ export default function VideoCombiner() {
 
         {/* Center – Canvas & Controls */}
         <div className="flex-1 flex flex-col items-center">
-          <div className="relative" style={{ width: "100%", maxWidth: canvasW, aspectRatio: `${canvasW}/${canvasH}` }}>
+          <div
+            className="relative"
+            style={{ width: "100%", maxWidth: canvasW, aspectRatio: `${canvasW}/${canvasH}` }}
+          >
             <canvas
               ref={canvasRef}
               width={canvasW}
               height={canvasH}
-              className="bg-black w-full h-full rounded"
+              className="w-full h-full rounded"
+              style={{ backgroundColor: "var(--black)" }}
               onMouseDown={handleCanvasMouseDown}
               onMouseMove={handleCanvasMouseMove}
               onMouseUp={handleCanvasMouseUp}
@@ -708,66 +764,175 @@ export default function VideoCombiner() {
               const t = clip.transform;
               return (
                 <div
-                  className="absolute border-2 border-blue-400 pointer-events-none"
+                  className="absolute border-2 pointer-events-none"
                   style={{
+                    borderColor: "var(--blue)",
                     left: `${(t.x / canvasW) * 100}%`,
                     top: `${(t.y / canvasH) * 100}%`,
                     width: `${(t.width / canvasW) * 100}%`,
                     height: `${(t.height / canvasH) * 100}%`,
                   }}
                 >
-                  <div className="absolute -top-2 -left-2 w-4 h-4 bg-blue-400 rounded-full" />
-                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-400 rounded-full" />
-                  <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-blue-400 rounded-full" />
-                  <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-blue-400 rounded-full" />
+                  <div
+                    className="absolute -top-2 -left-2 w-4 h-4 rounded-full"
+                    style={{ backgroundColor: "var(--blue)" }}
+                  />
+                  <div
+                    className="absolute -top-2 -right-2 w-4 h-4 rounded-full"
+                    style={{ backgroundColor: "var(--blue)" }}
+                  />
+                  <div
+                    className="absolute -bottom-2 -left-2 w-4 h-4 rounded-full"
+                    style={{ backgroundColor: "var(--blue)" }}
+                  />
+                  <div
+                    className="absolute -bottom-2 -right-2 w-4 h-4 rounded-full"
+                    style={{ backgroundColor: "var(--blue)" }}
+                  />
                 </div>
               );
             })()}
-            <p className="absolute bottom-1 left-1 text-[10px] text-gray-500 bg-black/50 px-1 rounded">
+            <p
+              className="absolute bottom-1 left-1 text-[10px] px-1 rounded"
+              style={{ color: "var(--gray)", backgroundColor: "var(--black)" }}
+            >
               {canvasW} x {canvasH} px
             </p>
           </div>
           <div className="flex gap-4 mt-3">
-            <button onClick={isPlaying ? stopPlayback : startPlayback} className="px-6 py-2 bg-green-600 rounded">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={isPlaying ? stopPlayback : startPlayback}
+              className="px-6 py-2 rounded cursor-pointer"
+              style={{ backgroundColor: "var(--green)", color: "var(--white)" }}
+            >
               {isPlaying ? "Pause" : "Play"}
-            </button>
-            <span className="self-center">{currentTime.toFixed(2)}s / {projectDuration.toFixed(2)}s</span>
+            </motion.button>
+            <span className="self-center" style={{ color: "var(--black)" }}>
+              {currentTime.toFixed(2)}s / {projectDuration.toFixed(2)}s
+            </span>
           </div>
           {selectedClipId && (
-            <div className="mt-2 flex gap-4 text-xs bg-gray-800 p-2 rounded">
-              <label>X: <input type="number" value={Math.round(clips.find(c=>c.id===selectedClipId)?.transform.x||0)} onChange={(e)=>updateClipTransform(selectedClipId,{...clips.find(c=>c.id===selectedClipId).transform,x:Number(e.target.value)})} className="w-16 bg-gray-700" /> px</label>
-              <label>Y: <input type="number" value={Math.round(clips.find(c=>c.id===selectedClipId)?.transform.y||0)} onChange={(e)=>updateClipTransform(selectedClipId,{...clips.find(c=>c.id===selectedClipId).transform,y:Number(e.target.value)})} className="w-16 bg-gray-700" /> px</label>
-              <label>W: <input type="number" value={Math.round(clips.find(c=>c.id===selectedClipId)?.transform.width||0)} onChange={(e)=>updateClipTransform(selectedClipId,{...clips.find(c=>c.id===selectedClipId).transform,width:Number(e.target.value)})} className="w-16 bg-gray-700" /> px</label>
-              <label>H: <input type="number" value={Math.round(clips.find(c=>c.id===selectedClipId)?.transform.height||0)} onChange={(e)=>updateClipTransform(selectedClipId,{...clips.find(c=>c.id===selectedClipId).transform,height:Number(e.target.value)})} className="w-16 bg-gray-700" /> px</label>
+            <div
+              className="mt-2 flex gap-4 text-xs p-2 rounded flex-wrap"
+              style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}
+            >
+              <label>
+                X:
+                <input
+                  type="number"
+                  value={Math.round(clips.find(c => c.id === selectedClipId)?.transform.x || 0)}
+                  onChange={(e) =>
+                    updateClipTransform(selectedClipId, {
+                      ...clips.find(c => c.id === selectedClipId).transform,
+                      x: Number(e.target.value),
+                    })
+                  }
+                  className="w-16 p-1 rounded"
+                  style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+                />
+                px
+              </label>
+              <label>
+                Y:
+                <input
+                  type="number"
+                  value={Math.round(clips.find(c => c.id === selectedClipId)?.transform.y || 0)}
+                  onChange={(e) =>
+                    updateClipTransform(selectedClipId, {
+                      ...clips.find(c => c.id === selectedClipId).transform,
+                      y: Number(e.target.value),
+                    })
+                  }
+                  className="w-16 p-1 rounded"
+                  style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+                />
+                px
+              </label>
+              <label>
+                W:
+                <input
+                  type="number"
+                  value={Math.round(clips.find(c => c.id === selectedClipId)?.transform.width || 0)}
+                  onChange={(e) =>
+                    updateClipTransform(selectedClipId, {
+                      ...clips.find(c => c.id === selectedClipId).transform,
+                      width: Number(e.target.value),
+                    })
+                  }
+                  className="w-16 p-1 rounded"
+                  style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+                />
+                px
+              </label>
+              <label>
+                H:
+                <input
+                  type="number"
+                  value={Math.round(clips.find(c => c.id === selectedClipId)?.transform.height || 0)}
+                  onChange={(e) =>
+                    updateClipTransform(selectedClipId, {
+                      ...clips.find(c => c.id === selectedClipId).transform,
+                      height: Number(e.target.value),
+                    })
+                  }
+                  className="w-16 p-1 rounded"
+                  style={{ backgroundColor: "var(--white)", color: "var(--black)" }}
+                />
+                px
+              </label>
             </div>
           )}
         </div>
 
         {/* Right Panel – Background Audio */}
-        <div className="w-64 bg-gray-800 p-3 rounded space-y-4">
+        <div
+          className="w-full t:w-64 p-3 rounded space-y-4"
+          style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}
+        >
           <h2 className="font-semibold">Background Audio</h2>
-          <input type="file" accept="audio/*" onChange={handleBackgroundAudioUpload} className="text-sm" />
+          <input type="file" accept="audio/*" onChange={handleBackgroundAudioUpload} className="hidden" id="bg-audio-import" />
+<motion.label
+  htmlFor="bg-audio-import"
+  className="file-upload-label"
+  style={{ backgroundColor: "var(--gray)" }}
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  <FaMusic /> Background Audio
+</motion.label>
           {backgroundAudio && (
             <div className="flex items-center gap-2">
               <span className="truncate flex-1">{backgroundAudio.file.name}</span>
-              <button
-                onClick={() => setBackgroundAudio((prev) => prev ? { ...prev, muted: !prev.muted } : null)}
-                className="text-sm bg-gray-700 px-2 py-1 rounded"
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() =>
+                  setBackgroundAudio((prev) =>
+                    prev ? { ...prev, muted: !prev.muted } : null
+                  )
+                }
+                className="text-sm px-2 py-1 rounded cursor-pointer"
+                style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
               >
                 {backgroundAudio.muted ? "Unmute" : "Mute"}
-              </button>
+              </motion.button>
             </div>
           )}
         </div>
       </div>
 
       {/* Timeline */}
-      <div className="mt-4 bg-gray-800 p-4 rounded overflow-x-auto">
+      <div
+        className="mt-4 p-4 rounded overflow-x-auto"
+        style={{ backgroundColor: "var(--lightgray)", color: "var(--black)" }}
+      >
         <div
           className="relative h-16"
           style={{ width: projectDuration * PIXELS_PER_SECOND + 200 }}
           onClick={(e) => {
-            if (!e.target.closest('[data-clip]')) {
+            if (!e.target.closest("[data-clip]")) {
               const rect = e.currentTarget.getBoundingClientRect();
               const x = e.clientX - rect.left;
               const time = x / PIXELS_PER_SECOND;
@@ -776,7 +941,15 @@ export default function VideoCombiner() {
           }}
         >
           {Array.from({ length: Math.ceil(projectDuration) + 1 }).map((_, i) => (
-            <div key={i} className="absolute top-0 h-full border-l border-gray-600 text-xs" style={{ left: i * PIXELS_PER_SECOND }}>
+            <div
+              key={i}
+              className="absolute top-0 h-full border-l text-xs"
+              style={{
+                left: i * PIXELS_PER_SECOND,
+                borderColor: "var(--darkgray)",
+                color: "var(--gray)",
+              }}
+            >
               <span className="ml-1">{i}s</span>
             </div>
           ))}
@@ -800,18 +973,42 @@ export default function VideoCombiner() {
       {/* Custom Context Menu */}
       {contextMenu && (
         <div
-          className="fixed z-50 bg-gray-700 border border-gray-600 rounded shadow-lg py-1 text-sm"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
+          className="fixed z-50 border rounded shadow-lg py-1 text-sm"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
+            backgroundColor: "var(--lightgray)",
+            borderColor: "var(--darkgray)",
+            color: "var(--black)",
+          }}
         >
-          <button onClick={deleteClip} className="block w-full text-left px-4 py-1 hover:bg-gray-600">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={deleteClip}
+            className="block w-full text-left px-4 py-1"
+            style={{ color: "var(--black)" }}
+          >
             Delete
-          </button>
-          <button onClick={toggleMuteFromContext} className="block w-full text-left px-4 py-1 hover:bg-gray-600">
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleMuteFromContext}
+            className="block w-full text-left px-4 py-1"
+            style={{ color: "var(--black)" }}
+          >
             {clips.find(c => c.id === contextMenu.clipId)?.muted ? "Unmute" : "Mute"}
-          </button>
-          <button onClick={replaceClipSource} className="block w-full text-left px-4 py-1 hover:bg-gray-600">
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={replaceClipSource}
+            className="block w-full text-left px-4 py-1"
+            style={{ color: "var(--black)" }}
+          >
             Replace
-          </button>
+          </motion.button>
         </div>
       )}
     </div>
@@ -824,26 +1021,85 @@ function SourceClip({ video, onAddToTimeline }) {
   const [trimEnd, setTrimEnd] = useState(video.duration);
 
   return (
-    <div className="bg-gray-700 p-2 rounded text-sm">
-      <div className="truncate font-medium">{video.file.name}</div>
+    <div
+      className="p-2 rounded text-sm space-y-1"
+      style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
+    >
+      <div className="flex items-center gap-2">
+        {video.thumbnail ? (
+          <img
+            src={video.thumbnail}
+            alt={video.file.name}
+            className="w-12 h-8 object-cover rounded flex-shrink-0"
+          />
+        ) : (
+          <div className="w-12 h-8 bg-black/30 rounded flex items-center justify-center text-[10px] flex-shrink-0">
+            🎬
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="truncate text-xs font-medium">{video.file.name}</div>
+          <div className="text-[10px] opacity-80">{formatDuration(video.duration)}</div>
+        </div>
+      </div>
       <div className="flex items-center gap-2 mt-1">
-        <label className="text-xs">Start:</label>
-        <input type="range" min={0} max={video.duration} step={0.1} value={trimStart} onChange={(e) => setTrimStart(Number(e.target.value))} className="w-16" />
-        <span className="text-xs">{trimStart.toFixed(1)}s</span>
+        <label className="text-xs" style={{ color: "var(--white)" }}>
+          Start:
+        </label>
+        <input
+          type="range"
+          min={0}
+          max={video.duration}
+          step={0.1}
+          value={trimStart}
+          onChange={(e) => setTrimStart(Number(e.target.value))}
+          className="w-16"
+        />
+        <span className="text-xs" style={{ color: "var(--white)" }}>
+          {trimStart.toFixed(1)}s
+        </span>
       </div>
       <div className="flex items-center gap-2">
-        <label className="text-xs">End:</label>
-        <input type="range" min={0} max={video.duration} step={0.1} value={trimEnd} onChange={(e) => setTrimEnd(Number(e.target.value))} className="w-16" />
-        <span className="text-xs">{trimEnd.toFixed(1)}s</span>
+        <label className="text-xs" style={{ color: "var(--white)" }}>
+          End:
+        </label>
+        <input
+          type="range"
+          min={0}
+          max={video.duration}
+          step={0.1}
+          value={trimEnd}
+          onChange={(e) => setTrimEnd(Number(e.target.value))}
+          className="w-16"
+        />
+        <span className="text-xs" style={{ color: "var(--white)" }}>
+          {trimEnd.toFixed(1)}s
+        </span>
       </div>
-      <button onClick={() => onAddToTimeline(video.id, trimStart, trimEnd)} className="mt-2 bg-blue-600 w-full py-1 rounded text-xs">
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => onAddToTimeline(video.id, trimStart, trimEnd)}
+        className="w-full py-1 rounded text-xs cursor-pointer"
+        style={{ backgroundColor: "var(--blue)", color: "var(--white)" }}
+      >
         Add to Timeline
-      </button>
+      </motion.button>
     </div>
   );
 }
 
-function TimelineClip({ clip, sourceVideo, onDrag, onTrimChange, onMuteToggle, pixelsPerSecond, isSelected, onSelect, onContextMenu }) {
+function TimelineClip({
+  clip,
+  sourceVideo,
+  onDrag,
+  onTrimChange,
+  onMuteToggle,
+  pixelsPerSecond,
+  isSelected,
+  onSelect,
+  onContextMenu,
+}) {
   const width = (clip.trimEnd - clip.trimStart) * pixelsPerSecond;
   const left = clip.startTime * pixelsPerSecond;
 
@@ -870,43 +1126,70 @@ function TimelineClip({ clip, sourceVideo, onDrag, onTrimChange, onMuteToggle, p
   return (
     <div
       data-clip="true"
-      className={`absolute top-1/4 h-8 rounded flex items-center text-xs px-1 overflow-hidden cursor-pointer ${isSelected ? "bg-indigo-400" : "bg-indigo-600"}`}
-      style={{ left, width }}
+      className="absolute top-1/4 h-8 rounded flex items-center text-xs px-1 overflow-hidden cursor-pointer"
+      style={{
+        left,
+        width,
+        backgroundColor: isSelected ? "var(--blue)" : "var(--gray)",
+        color: "var(--white)",
+      }}
       onMouseDown={handleMouseDown}
       onClick={onSelect}
       onContextMenu={(e) => onContextMenu(e, clip.id)}
     >
       <div
-        className="absolute left-0 top-0 h-full w-2 bg-indigo-300 cursor-col-resize"
+        className="absolute left-0 top-0 h-full w-2 cursor-col-resize"
+        style={{ backgroundColor: isSelected ? "var(--lightgray)" : "var(--darkgray)" }}
         onMouseDown={(e) => {
-          e.stopPropagation(); e.preventDefault();
+          e.stopPropagation();
+          e.preventDefault();
           const startX = e.clientX;
           const initTrimStart = clip.trimStart;
-          const onMove = (e) => { const dx = e.clientX - startX; onTrimChange(clip.id, "start", initTrimStart + dx / pixelsPerSecond); };
-          const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+          const onMove = (e) => {
+            const dx = e.clientX - startX;
+            onTrimChange(clip.id, "start", initTrimStart + dx / pixelsPerSecond);
+          };
+          const onUp = () => {
+            document.removeEventListener("mousemove", onMove);
+            document.removeEventListener("mouseup", onUp);
+          };
           document.addEventListener("mousemove", onMove);
           document.addEventListener("mouseup", onUp);
         }}
       />
       <div
-        className="absolute right-0 top-0 h-full w-2 bg-indigo-300 cursor-col-resize"
+        className="absolute right-0 top-0 h-full w-2 cursor-col-resize"
+        style={{ backgroundColor: isSelected ? "var(--lightgray)" : "var(--darkgray)" }}
         onMouseDown={(e) => {
-          e.stopPropagation(); e.preventDefault();
+          e.stopPropagation();
+          e.preventDefault();
           const startX = e.clientX;
           const initTrimEnd = clip.trimEnd;
-          const onMove = (e) => { const dx = e.clientX - startX; onTrimChange(clip.id, "end", initTrimEnd + dx / pixelsPerSecond); };
-          const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+          const onMove = (e) => {
+            const dx = e.clientX - startX;
+            onTrimChange(clip.id, "end", initTrimEnd + dx / pixelsPerSecond);
+          };
+          const onUp = () => {
+            document.removeEventListener("mousemove", onMove);
+            document.removeEventListener("mouseup", onUp);
+          };
           document.addEventListener("mousemove", onMove);
           document.addEventListener("mouseup", onUp);
         }}
       />
       <span className="truncate mx-2">{sourceVideo.file.name}</span>
-      <button
-        onClick={(e) => { e.stopPropagation(); onMuteToggle(!clip.muted); }}
-        className="ml-auto text-xs bg-gray-800 px-1 rounded"
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onMuteToggle(!clip.muted);
+        }}
+        className="ml-auto text-xs px-1 rounded cursor-pointer"
+        style={{ backgroundColor: "var(--darkgray)", color: "var(--white)" }}
       >
         {clip.muted ? "Unmute" : "Mute"}
-      </button>
+      </motion.button>
     </div>
   );
 }

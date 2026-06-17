@@ -1,5 +1,7 @@
 // components/VideoToAudioConverter.jsx
 import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { FaVideo } from 'react-icons/fa';
 
 export default function VideoToAudioConverter() {
   const [videoSrc, setVideoSrc] = useState(null);
@@ -123,48 +125,41 @@ export default function VideoToAudioConverter() {
     }
   };
 
-  return (
-    <div className="p-6 flex flex-col items-center gap-4">
-      <h2 className="text-xl font-bold text-primary">🎵 Video to Audio Converter</h2>
-      <input type="file" accept="video/*" onChange={handleFile} className="mb-4" />
-
+ return (
+    <div className="p-6 flex flex-col items-center gap-4" style={{ backgroundColor: "var(--white)", color: "var(--black)" }}>
+      <h2 className="text-xl font-bold" style={{ color: "var(--blue)" }}>🎵 Video to Audio Converter</h2>
+      <input type="file" accept="video/*" onChange={handleFile} id="video-to-audio" className="hidden" />
+<motion.label
+  htmlFor="video-to-audio"
+  className="file-upload-label"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  <FaVideo /> Select Video
+</motion.label>
       {videoSrc && (
         <>
-          <video
-            ref={videoRef}
-            src={videoSrc}
-            className="hidden"
-            onLoadedMetadata={handleLoadedMetadata}
-            controls={false}
-          />
-          {!videoReady && <p className="text-muted">Loading video metadata…</p>}
-          {videoReady && !processing && (
-            <p className="text-muted">Video ready. Click "Extract Audio" to begin.</p>
-          )}
+          <video ref={videoRef} src={videoSrc} className="hidden" onLoadedMetadata={handleLoadedMetadata} controls={false} />
+          {!videoReady && <p style={{ color: "var(--gray)" }}>Loading video metadata…</p>}
+          {videoReady && !processing && <p style={{ color: "var(--gray)" }}>Video ready. Click "Extract Audio" to begin.</p>}
 
           <div className="flex gap-4">
-            <button
-              onClick={startExtraction}
-              disabled={!videoReady || processing}
-              className="px-6 py-3 bg-primary text-white rounded-xl disabled:opacity-50"
-            >
-              {processing ? 'Extracting Audio...' : 'Extract Audio'}
-            </button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={startExtraction} disabled={!videoReady || processing} className="px-6 py-3 rounded-xl disabled:opacity-50 cursor-pointer"
+              style={{ backgroundColor: "var(--blue)", color: "var(--white)" }}>{processing ? 'Extracting Audio...' : 'Extract Audio'}</motion.button>
             {processing && (
-              <button onClick={stopExtraction} className="px-4 py-2 bg-red-600 text-white rounded-xl">
-                ⏹ Stop
-              </button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={stopExtraction} className="px-4 py-2 rounded-xl cursor-pointer"
+                style={{ backgroundColor: "var(--red)", color: "var(--white)" }}>⏹ Stop</motion.button>
             )}
           </div>
 
-          {error && <div className="bg-red-900/80 text-white p-3 rounded-xl max-w-xl text-center">⚠️ {error}</div>}
+          {error && <div className="p-3 rounded-xl max-w-xl text-center" style={{ backgroundColor: "var(--red)", color: "var(--white)" }}>⚠️ {error}</div>}
 
           {outputUrl && (
             <div className="flex flex-col items-center gap-2 w-full max-w-xl">
               <audio controls src={outputUrl} className="w-full" />
-              <a href={outputUrl} download="extracted_audio.webm" className="text-accent underline">
-                ⬇ Download Audio (.webm)
-              </a>
+              <a href={outputUrl} download="extracted_audio.webm" style={{ color: "var(--blue)" }} className="underline">⬇ Download Audio (.webm)</a>
             </div>
           )}
         </>

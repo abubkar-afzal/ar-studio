@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
+import { motion } from "framer-motion";
+import { FaPlus, FaDownload, FaCompress, FaTrash, FaVideo, FaImage } from "react-icons/fa";
+import { generateThumbnail, formatDuration } from "../utils/generateThumbnail";
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -11,17 +14,30 @@ export default function MediaCompressor() {
 
   const allDone = files.length > 0 && files.every(f => f.status === 'done' || f.status === 'error');
 
-  // Handle file selection (bulk or single)
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     const selectedFiles = Array.from(e.target.files);
-    const newFiles = selectedFiles.map((file) => {
+    const newFiles = [];
+
+    for (const file of selectedFiles) {
       const id = generateId();
       const url = URL.createObjectURL(file);
-      return {
+      const type = file.type.startsWith("video") ? "video" : "image";
+      let thumbnail = null;
+
+      if (type === "video") {
+        try {
+          thumbnail = await generateThumbnail(file);
+        } catch (err) {
+          console.warn("Thumbnail generation failed", err);
+        }
+      }
+
+      newFiles.push({
         id,
         file,
-        type: file.type.startsWith("video") ? "video" : "image",
+        type,
         url,
+        thumbnail,
         originalSize: file.size,
         compressedBlob: null,
         compressedSize: null,
@@ -29,19 +45,18 @@ export default function MediaCompressor() {
         quality: 0.7,
         resolution: 1,
         progress: 0,
-      };
-    });
+      });
+    }
+
     setFiles((prev) => [...prev, ...newFiles]);
   };
 
-  // Update individual settings
   const updateFileSetting = (id, key, value) => {
     setFiles((prev) =>
       prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
     );
   };
 
-  // ─── Image compression (canvas) ──────────────────────────
   const compressImage = (fileObj, onProgress) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -68,62 +83,35 @@ export default function MediaCompressor() {
     });
   };
 
-  // ─── Video compression (canvas video + original audio, real‑time) ──
   const compressVideo = (fileObj, onProgress) => {
     return new Promise((resolve, reject) => {
       const video = document.createElement("video");
       video.src = fileObj.url;
-      video.muted = true;                // we capture audio separately
+      video.muted = true;
       video.playsInline = true;
       video.preload = "auto";
-
       let finished = false;
       const clean = () => { finished = true; };
-
-      video.addEventListener("error", () => {
-        clean();
-        reject(new Error("Video load error"));
-      });
-
+      video.addEventListener("error", () => { clean(); reject(new Error("Video load error")); });
       video.addEventListener("loadedmetadata", async () => {
         if (finished) return;
         const duration = video.duration;
-        if (duration <= 0) {
-          clean();
-          reject(new Error("Invalid video duration"));
-          return;
-        }
-
-        // 1. Create offscreen canvas for video re‑scaling
+        if (duration <= 0) { clean(); reject(new Error("Invalid video duration")); return; }
         const offscreen = document.createElement("canvas");
         const scale = fileObj.resolution;
         offscreen.width = video.videoWidth * scale;
         offscreen.height = video.videoHeight * scale;
-        const canvasStream = offscreen.captureStream(30);   // video track
-
-        // 2. Capture original audio track from the video element
+        const canvasStream = offscreen.captureStream(30);
         let audioStream = null;
         try {
           const sourceStream = video.captureStream();
           const audioTracks = sourceStream.getAudioTracks();
-          if (audioTracks.length > 0) {
-            audioStream = new MediaStream(audioTracks);
-          }
-        } catch (e) {
-          // no audio track available – that's fine
-        }
-
-        // 3. Combine video and audio into one stream
+          if (audioTracks.length > 0) audioStream = new MediaStream(audioTracks);
+        } catch (e) {}
         const combinedStream = new MediaStream();
-        // Add video track from canvas
         canvasStream.getVideoTracks().forEach(t => combinedStream.addTrack(t));
-        // Add audio track if available
-        if (audioStream) {
-          audioStream.getAudioTracks().forEach(t => combinedStream.addTrack(t));
-        }
-
-        // 4. MediaRecorder with user‑defined bitrate (derived from quality)
-        const bitrate = Math.round(5000000 * fileObj.quality + 500000); // 0.5‑5.5 Mbps
+        if (audioStream) audioStream.getAudioTracks().forEach(t => combinedStream.addTrack(t));
+        const bitrate = Math.round(5000000 * fileObj.quality + 500000);
         const recorder = new MediaRecorder(combinedStream, {
           mimeType: "video/webm; codecs=vp9",
           videoBitsPerSecond: bitrate,
@@ -131,37 +119,22 @@ export default function MediaCompressor() {
         const chunks = [];
         recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
         recorder.onstop = () => {
-          if (!finished) {
-            clean();
-            resolve(new Blob(chunks, { type: "video/webm" }));
-          }
+          if (!finished) { clean(); resolve(new Blob(chunks, { type: "video/webm" })); }
         };
-
-        // 5. Start playback
         video.currentTime = 0;
-        try {
-          await video.play();
-        } catch (err) {
-          clean();
-          reject(err);
-          return;
-        }
+        try { await video.play(); } catch (err) { clean(); reject(err); return; }
         recorder.start();
-
-        // 6. Drawing loop – runs for the whole duration
         const startTime = performance.now() / 1000;
         const drawLoop = () => {
           if (finished) return;
           const elapsed = (performance.now() / 1000) - startTime;
           const progress = Math.min(100, (elapsed / duration) * 100);
           onProgress(progress);
-
           if (elapsed >= duration || video.ended) {
             recorder.stop();
             video.pause();
             return;
           }
-
           if (video.readyState >= 2) {
             const ctx = offscreen.getContext("2d");
             ctx.drawImage(video, 0, 0, offscreen.width, offscreen.height);
@@ -169,95 +142,50 @@ export default function MediaCompressor() {
           requestAnimationFrame(drawLoop);
         };
         requestAnimationFrame(drawLoop);
-
-        // Safety timeout
         setTimeout(() => {
-          if (!finished && recorder.state === "recording") {
-            recorder.stop();
-            video.pause();
-          }
+          if (!finished && recorder.state === "recording") { recorder.stop(); video.pause(); }
         }, (duration + 3) * 1000);
       });
-
       video.load();
     });
   };
 
-  // ─── Compress a single file (updates progress) ───────────
   const compressSingle = async (fileObj) => {
     if (fileObj.status === "compressing") return;
-
     updateFileSetting(fileObj.id, "status", "compressing");
     updateFileSetting(fileObj.id, "progress", 0);
-
     const onProgress = (p) => {
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === fileObj.id ? { ...f, progress: Math.round(p) } : f
-        )
-      );
+      setFiles((prev) => prev.map((f) => f.id === fileObj.id ? { ...f, progress: Math.round(p) } : f));
     };
-
     try {
       let blob;
-      if (fileObj.type === "image") {
-        blob = await compressImage(fileObj, onProgress);
-      } else {
-        blob = await compressVideo(fileObj, onProgress);
-      }
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === fileObj.id
-            ? {
-                ...f,
-                compressedBlob: blob,
-                compressedSize: blob.size,
-                status: "done",
-                progress: 100,
-              }
-            : f
-        )
-      );
+      if (fileObj.type === "image") blob = await compressImage(fileObj, onProgress);
+      else blob = await compressVideo(fileObj, onProgress);
+      setFiles((prev) => prev.map((f) => f.id === fileObj.id ? { ...f, compressedBlob: blob, compressedSize: blob.size, status: "done", progress: 100 } : f));
     } catch (err) {
       console.error(err);
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === fileObj.id ? { ...f, status: "error", progress: 0 } : f
-        )
-      );
+      setFiles((prev) => prev.map((f) => f.id === fileObj.id ? { ...f, status: "error", progress: 0 } : f));
     }
   };
 
-  // ─── Compress all pending files ──────────────────────────
   const compressAll = async () => {
     setCompressingAll(true);
     for (const fileObj of files) {
-      if (fileObj.status === "pending" || fileObj.status === "error") {
-        await compressSingle(fileObj);
-      }
+      if (fileObj.status === "pending" || fileObj.status === "error") await compressSingle(fileObj);
     }
     setCompressingAll(false);
   };
 
-  // ─── Download helpers ────────────────────────────────────
   const downloadFile = (fileObj) => {
     if (!fileObj.compressedBlob) return;
     const a = document.createElement("a");
     a.href = URL.createObjectURL(fileObj.compressedBlob);
-    if (fileObj.type === "image") {
-      a.download = `compressed_${fileObj.file.name.replace(/\.[^/.]+$/, "")}.jpg`;
-    } else {
-      a.download = `compressed_${fileObj.file.name.replace(/\.[^/.]+$/, "")}.webm`;
-    }
+    a.download = `compressed_${fileObj.file.name.replace(/\.[^/.]+$/, "")}.${fileObj.type === "image" ? "jpg" : "webm"}`;
     a.click();
   };
 
   const downloadAll = () => {
-    files.forEach((f) => {
-      if (f.status === "done") {
-        setTimeout(() => downloadFile(f), 100);
-      }
-    });
+    files.forEach((f) => { if (f.status === "done") setTimeout(() => downloadFile(f), 100); });
   };
 
   const formatSize = (bytes) => {
@@ -267,61 +195,81 @@ export default function MediaCompressor() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-white p-4 space-y-4 overflow-auto">
-      <h2 className="text-xl font-bold text-primary">📦 Media Compressor</h2>
-      <p className="text-sm text-gray-400">
+    <div className="flex flex-col h-full p-4 space-y-4 overflow-auto" style={{ backgroundColor: "var(--white)", color: "var(--black)" }}>
+      <h2 className="text-xl font-bold" style={{ color: "var(--blue)" }}>📦 Media Compressor</h2>
+      <p className="text-sm" style={{ color: "var(--gray)" }}>
         Compress videos and images by adjusting quality/resolution. Works with bulk or single files.
       </p>
 
       <div className="flex gap-4 flex-wrap">
-        <input
-          type="file"
-          accept="video/*,image/*"
-          multiple
-          onChange={handleFileSelect}
-          ref={fileInputRef}
-          className="hidden"
-        />
-        <button
-          onClick={() => fileInputRef.current.click()}
-          className="px-4 py-2 bg-blue-600 rounded text-sm"
+        <input type="file" accept="video/*,image/*" multiple onChange={handleFileSelect} ref={fileInputRef} id="media-upload" className="hidden" />
+        <motion.label
+          htmlFor="media-upload"
+          className="file-upload-label"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          Add Files
-        </button>
-        <button
+          <FaPlus /> Add Files
+        </motion.label>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={compressAll}
           disabled={compressingAll || files.length === 0}
-          className="px-4 py-2 bg-yellow-600 rounded text-sm disabled:opacity-50"
+          className="px-4 py-2 rounded text-sm disabled:opacity-50 cursor-pointer"
+          style={{ backgroundColor: "var(--yellow)", color: "var(--black)" }}
         >
           {compressingAll ? "Compressing…" : "Compress All"}
-        </button>
+        </motion.button>
         {allDone && (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={downloadAll}
-            className="px-4 py-2 bg-green-600 rounded text-sm"
+            className="px-4 py-2 rounded text-sm cursor-pointer"
+            style={{ backgroundColor: "var(--green)", color: "var(--white)" }}
           >
             Download All
-          </button>
+          </motion.button>
         )}
       </div>
 
-      {/* File list */}
       <div className="space-y-3">
         {files.map((fileObj) => (
           <div
             key={fileObj.id}
-            className="bg-gray-800 p-3 rounded flex flex-col gap-2"
+            className="p-3 rounded flex flex-col gap-2"
+            style={{ backgroundColor: "var(--lightgray)" }}
           >
-            <div className="flex items-center justify-between">
-              <span className="truncate max-w-[200px] text-sm">{fileObj.file.name}</span>
-              <span className="text-xs text-gray-400">
-                {fileObj.type === "video" ? "🎬" : "🖼️"} {formatSize(fileObj.originalSize)}
-              </span>
+            <div className="flex items-center gap-3">
+              {/* Thumbnail */}
+              {fileObj.type === "video" && fileObj.thumbnail ? (
+                <img
+                  src={fileObj.thumbnail}
+                  alt={fileObj.file.name}
+                  className="w-16 h-10 object-cover rounded flex-shrink-0"
+                />
+              ) : fileObj.type === "video" ? (
+                <div className="w-16 h-10 bg-black/30 rounded flex items-center justify-center text-xs flex-shrink-0">
+                  🎬
+                </div>
+              ) : (
+                <div className="w-16 h-10 bg-black/30 rounded flex items-center justify-center text-xs flex-shrink-0">
+                  🖼️
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="truncate text-sm font-medium" style={{ color: "var(--black)" }}>
+                  {fileObj.file.name}
+                </div>
+                <div className="text-xs" style={{ color: "var(--gray)" }}>
+                  {fileObj.type === "video" ? "🎬" : "🖼️"} {formatSize(fileObj.originalSize)}
+                </div>
+              </div>
             </div>
 
-            {/* Settings */}
             <div className="flex gap-4 text-xs">
-              <label className="flex items-center gap-1">
+              <label className="flex items-center gap-1" style={{ color: "var(--black)" }}>
                 Quality:
                 <input
                   type="range"
@@ -334,7 +282,7 @@ export default function MediaCompressor() {
                 />
                 <span>{Math.round(fileObj.quality * 100)}%</span>
               </label>
-              <label className="flex items-center gap-1">
+              <label className="flex items-center gap-1" style={{ color: "var(--black)" }}>
                 Scale:
                 <input
                   type="range"
@@ -349,50 +297,50 @@ export default function MediaCompressor() {
               </label>
             </div>
 
-            {/* Progress bar (during compression) */}
             {fileObj.status === "compressing" && (
-              <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                <div
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${fileObj.progress}%` }}
-                />
+              <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: "var(--gray)" }}>
+                <div className="h-2 rounded-full transition-all duration-300" style={{ width: `${fileObj.progress}%`, backgroundColor: "var(--blue)" }} />
               </div>
             )}
 
-            {/* Status & Actions */}
             <div className="flex items-center justify-between">
               <span className="text-xs">
                 {fileObj.status === "compressing" && `⏳ Compressing... ${fileObj.progress}%`}
-                {fileObj.status === "done" && (
-                  <span className="text-green-400">
-                    ✅ Compressed: {formatSize(fileObj.compressedSize)} ({((fileObj.compressedSize / fileObj.originalSize) * 100).toFixed(0)}%)
-                  </span>
-                )}
-                {fileObj.status === "error" && <span className="text-red-400">❌ Error – retry</span>}
+                {fileObj.status === "done" && <span style={{ color: "var(--green)" }}>✅ Compressed: {formatSize(fileObj.compressedSize)} ({((fileObj.compressedSize / fileObj.originalSize) * 100).toFixed(0)}%)</span>}
+                {fileObj.status === "error" && <span style={{ color: "var(--red)" }}>❌ Error – retry</span>}
                 {fileObj.status === "pending" && "Pending"}
               </span>
               <div className="flex gap-2">
                 {fileObj.status === "done" && (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => downloadFile(fileObj)}
-                    className="px-2 py-1 bg-green-600 text-xs rounded"
+                    className="px-2 py-1 rounded text-xs cursor-pointer"
+                    style={{ backgroundColor: "var(--green)", color: "var(--white)" }}
                   >
-                    Download
-                  </button>
+                    <FaDownload size={12} />
+                  </motion.button>
                 )}
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => compressSingle(fileObj)}
                   disabled={fileObj.status === "compressing"}
-                  className="px-2 py-1 bg-gray-600 text-xs rounded disabled:opacity-50"
+                  className="px-2 py-1 rounded text-xs disabled:opacity-50 cursor-pointer"
+                  style={{ backgroundColor: "var(--gray)", color: "var(--white)" }}
                 >
-                  Compress
-                </button>
-                <button
+                  <FaCompress size={12} />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setFiles((prev) => prev.filter((f) => f.id !== fileObj.id))}
-                  className="px-2 py-1 bg-red-600 text-xs rounded"
+                  className="px-2 py-1 rounded text-xs cursor-pointer"
+                  style={{ backgroundColor: "var(--red)", color: "var(--white)" }}
                 >
-                  Remove
-                </button>
+                  <FaTrash size={12} />
+                </motion.button>
               </div>
             </div>
           </div>

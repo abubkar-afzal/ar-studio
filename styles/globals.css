@@ -1,60 +1,252 @@
 /* styles/globals.css */
 @import "tailwindcss";
 
-/* Define colour tokens that will be filled by CSS variables */
 @theme {
-  --color-primary: var(--theme-primary);
-  --color-secondary: var(--theme-secondary);
-  --color-bg: var(--theme-bg);
-  --color-surface: var(--theme-surface);
-  --color-text: var(--theme-text);
-  --color-accent: var(--theme-accent);
-  --color-muted: var(--theme-muted);
+  --breakpoint-sm: 290px;
+  --breakpoint-mm: 375px;
+  --breakpoint-lm: 425px;
+  --breakpoint-t: 768px;
+  --breakpoint-l: 1024px;
+  --breakpoint-ll: 1440px;
+  --breakpoint-k: 2560px;
+  --breakpoint-my: 2700px;
 }
 
-/* Default (Light) theme */
-:root,
-[data-theme="light"] {
-  --theme-primary: #2563eb;
-  --theme-secondary: #3b82f6;
-  --theme-bg: #ffffff;
-  --theme-surface: #f3f4f6;
-  --theme-text: #111827;
-  --theme-accent: #f59e0b;
-  --theme-muted: #9ca3af;
+/* ── Global resets ── */
+* {
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 
-[data-theme="dark"] {
-  --theme-primary: #4f46e5;
-  --theme-secondary: #6366f1;
-  --theme-bg: #0f172a;
-  --theme-surface: #1e293b;
-  --theme-text: #f8fafc;
-  --theme-accent: #fbbf24;
-  --theme-muted: #94a3b8;
+html, body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--white, #ffffff);
+  color: var(--black, #111827);
 }
 
-[data-theme="cyberpunk"] {
-  --theme-primary: #ff007f;
-  --theme-secondary: #00ffff;
-  --theme-bg: #0d0221;
-  --theme-surface: #1a0533;
-  --theme-text: #f0f0f0;
-  --theme-accent: #ffff00;
-  --theme-muted: #555555;
+/* ── Custom File Input (hidden input + styled label) ── */
+input[type="file"] {
+  display: none; /* hide the native input */
 }
 
-[data-theme="nature"] {
-  --theme-primary: #047857;
-  --theme-secondary: #10b981;
-  --theme-bg: #f0fdf4;
-  --theme-surface: #dcfce7;
-  --theme-text: #064e3b;
-  --theme-accent: #f59e0b;
-  --theme-muted: #6b7280;
+.file-upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  background: var(--blue, #3b82f6);
+  color: var(--white, #ffffff);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px var(--shadow, rgba(0,0,0,0.1));
+}
+.file-upload-label:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px var(--shadow, rgba(0,0,0,0.2));
+}
+.file-upload-label:active {
+  transform: scale(0.97);
 }
 
-/* Smooth colour transitions */
-body, * {
-  transition: background-color 0.6s ease, color 0.6s ease, border-color 0.6s ease, fill 0.6s ease;
+/* ── DJ‑style Round Range Knobs ── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--gray, #6b7280);
+  border-radius: 10px;
+  outline: none;
+  transition: background 0.2s;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--blue, #3b82f6);
+  cursor: pointer;
+  box-shadow: 0 0 0 4px var(--white, #ffffff), 0 0 0 6px var(--blue, #3b82f6);
+  transition: 0.2s;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 5px var(--white, #ffffff), 0 0 0 8px var(--blue, #3b82f6);
+}
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.25);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--blue, #3b82f6);
+  cursor: pointer;
+  border: 4px solid var(--white, #ffffff);
+  box-shadow: 0 0 0 2px var(--blue, #3b82f6);
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: var(--gray, #6b7280);
+  border-radius: 10px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--lightgray, #f3f4f6); }
+::-webkit-scrollbar-thumb { background: var(--blue, #3b82f6); border-radius: 8px; }
+
+/* ── Utility ── */
+.hidden { display: none !important; }
+
+.file-upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  background: var(--blue, #3b82f6);
+  color: var(--white, #ffffff);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px var(--shadow, rgba(0,0,0,0.1));
+}
+.file-upload-label:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px var(--shadow, rgba(0,0,0,0.2));
+}
+.file-upload-label:active {
+  transform: scale(0.97);
+}
+
+/* styles/globals.css — Premium, Elegant Range Slider */
+
+/* ── Base Slider (compact, refined) ── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 4px;
+  outline: none;
+  background: var(--gray, #6b7280);
+  background-image: linear-gradient(to right, var(--blue, #3b82f6), var(--blue, #3b82f6));
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s ease, opacity 0.2s ease;
+  cursor: pointer;
+  width: 100%;
+  position: relative;
+}
+
+/* ── Fill track glow (active fill) ── */
+input[type="range"]:hover {
+  opacity: 0.95;
+}
+
+/* ── Knob / Thumb (WebKit) ── */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--white, #ffffff), var(--lightgray, #f3f4f6));
+  cursor: pointer;
+  border: 2px solid var(--blue, #3b82f6);
+  box-shadow:
+    0 0 0 0 rgba(59, 130, 246, 0),
+    0 2px 6px rgba(0, 0, 0, 0.15),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-top: -6px; /* center vertically */
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  border-color: var(--blue, #3b82f6);
+  box-shadow:
+    0 0 0 4px rgba(59, 130, 246, 0.15),
+    0 4px 12px rgba(59, 130, 246, 0.25),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+  border-color: var(--blue, #3b82f6);
+  box-shadow:
+    0 0 0 6px rgba(59, 130, 246, 0.2),
+    0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+/* ── Track (Firefox) ── */
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--gray, #6b7280);
+  border: none;
+  outline: none;
+}
+
+input[type="range"]::-moz-range-progress {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--blue, #3b82f6);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--white, #ffffff), var(--lightgray, #f3f4f6));
+  cursor: pointer;
+  border: 2px solid var(--blue, #3b82f6);
+  box-shadow:
+    0 0 0 0 rgba(59, 130, 246, 0),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  border-color: var(--blue, #3b82f6);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+/* ── Extra Small variant ── */
+input[type="range"].slider-xs {
+  height: 3px;
+}
+
+input[type="range"].slider-xs::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  margin-top: -4.5px;
+}
+
+input[type="range"].slider-xs::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+/* ── Disabled state ── */
+input[type="range"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+input[type="range"]:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+  border-color: var(--gray, #6b7280);
+  box-shadow: none;
+}
+
+input[type="range"]:disabled::-moz-range-thumb {
+  cursor: not-allowed;
+  border-color: var(--gray, #6b7280);
 }
