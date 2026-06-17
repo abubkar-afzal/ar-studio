@@ -250,3 +250,34 @@ input[type="range"]:disabled::-moz-range-thumb {
   cursor: not-allowed;
   border-color: var(--gray, #6b7280);
 }
+
+* {
+  user-select: none;           /* prevents text selection */
+  -webkit-user-select: none;   /* Safari/WebKit */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* IE/Edge */
+  -webkit-touch-callout: none; /* iOS long-press */
+}
+
+/* Allow text selection ONLY inside input fields and textareas */
+input, textarea, [contenteditable="true"] {
+  user-select: auto;
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+}
+
+/* Disable drag of images and links */
+img, a {
+  -webkit-user-drag: none;
+  user-drag: none;
+  draggable: false;
+}
+
+/* Remove default browser selection highlight (optional) */
+::selection {
+  background: transparent;
+}
+::-moz-selection {
+  background: transparent;
+}

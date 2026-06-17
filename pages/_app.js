@@ -76,7 +76,6 @@ export default function App({ Component, pageProps }) {
   const [activeEditor, setActiveEditor] = useState(null);
   const [customColors, setCustomColors] = useState(null);
 
-  // Apply theme variables to :root
   const applyTheme = (themeName, custom) => {
     const base = THEMES[themeName] || THEMES.light;
     const final = { ...base, ...(custom || {}) };
@@ -84,14 +83,12 @@ export default function App({ Component, pageProps }) {
     Object.entries(final).forEach(([key, value]) => {
       root.style.setProperty(`--${key}`, value);
     });
-    // Also set data-theme for CSS overrides
     root.setAttribute('data-theme', themeName);
-    // Set body background for immediate feedback
     document.body.style.backgroundColor = final.white;
     document.body.style.color = final.black;
   };
 
-  // Load saved theme and custom colors on mount
+  // ─── 1. Load saved theme ───
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
     const savedCustom = localStorage.getItem('customColors');
@@ -104,13 +101,42 @@ export default function App({ Component, pageProps }) {
     applyTheme(savedTheme, parsedCustom);
   }, []);
 
-  // Re-apply when theme or custom colors change
+  // ─── 2. Re-apply when theme changes ───
   useEffect(() => {
     if (!theme) return;
     applyTheme(theme, customColors);
     localStorage.setItem('theme', theme);
     localStorage.setItem('customColors', JSON.stringify(customColors || {}));
   }, [theme, customColors]);
+
+  // ─── 3. Block right‑click and drag (robust capture phase) ───
+  useEffect(() => {
+    const preventContextMenu = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+
+    const preventDrag = (e) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Use capture: true to catch events before they bubble
+    document.addEventListener('contextmenu', preventContextMenu, { capture: true });
+    document.addEventListener('dragstart', preventDrag, { capture: true });
+
+    // Also prevent on window (for iframes or edge cases)
+    window.addEventListener('contextmenu', preventContextMenu, { capture: true });
+    window.addEventListener('dragstart', preventDrag, { capture: true });
+
+    return () => {
+      document.removeEventListener('contextmenu', preventContextMenu, { capture: true });
+      document.removeEventListener('dragstart', preventDrag, { capture: true });
+      window.removeEventListener('contextmenu', preventContextMenu, { capture: true });
+      window.removeEventListener('dragstart', preventDrag, { capture: true });
+    };
+  }, []);
 
   const handleSetCustomColors = (newCustom) => {
     setCustomColors(newCustom);

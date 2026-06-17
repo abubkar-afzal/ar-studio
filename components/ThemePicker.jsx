@@ -1,8 +1,8 @@
 // components/ThemePicker.jsx
 import { useContext, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { AppContext } from "../pages/_app";
-import { FaSun, FaMoon, FaRobot, FaLeaf } from "react-icons/fa";
+import { FaSun, FaMoon, FaRobot, FaLeaf, FaChevronDown } from "react-icons/fa";
 
 const themes = [
   { name: "light", label: "Light", icon: <FaSun /> },
@@ -30,8 +30,10 @@ export default function ThemePicker() {
   };
 
   const resetColors = () => {
-    setCustomColors(null); // removes custom overrides; app will revert to theme defaults
+    setCustomColors(null);
   };
+
+  const toggleDropdown = () => setIsCustomOpen(!isCustomOpen);
 
   return (
     <div
@@ -41,6 +43,7 @@ export default function ThemePicker() {
         borderColor: "var(--darkgray)",
       }}
     >
+      {/* Theme buttons */}
       <div className="flex flex-wrap gap-2 justify-center mb-4">
         {themes.map((t) => (
           <motion.button
@@ -60,35 +63,61 @@ export default function ThemePicker() {
         ))}
       </div>
 
-      <details className="mt-2">
-        <summary className="text-sm font-semibold cursor-pointer" style={{ color: "var(--gray)" }}>
-           Custom Colors
-        </summary>
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {colorKeys.map((key) => (
-            <div key={key} className="flex items-center gap-2">
-              <label className="text-xs capitalize flex-1" style={{ color: "var(--black)" }}>
-                {key}
-              </label>
-              <input
-                type="color"
-                value={(customColors && customColors[key]) || "#000000"}
-                onChange={(e) => handleColorChange(key, e.target.value)}
-                className="w-8 h-8 p-0 border-0 cursor-pointer rounded-full"
-              />
-            </div>
-          ))}
-        </div>
+      {/* Custom dropdown toggle */}
+      <div className="mt-2">
         <motion.button
-          onClick={resetColors}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="mt-3 px-4 py-1.5 text-sm rounded-lg cursor-pointer"
-          style={{ backgroundColor: "var(--blue)", color: "var(--white)" }}
+          onClick={toggleDropdown}
+          className="w-full flex items-center justify-between text-sm font-semibold cursor-pointer px-2 py-1 rounded-lg hover:bg-black/5 transition-colors"
+          style={{ color: "var(--gray)" }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          Reset to Theme Defaults
+          <span> Custom Colors</span>
+          <motion.span
+            animate={{ rotate: isCustomOpen ? 180 : 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <FaChevronDown />
+          </motion.span>
         </motion.button>
-      </details>
+
+        <AnimatePresence>
+          {isCustomOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, y: -10 }}
+              animate={{ height: "auto", opacity: 1, y: 0 }}
+              exit={{ height: 0, opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              style={{ overflow: "hidden" }}
+            >
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {colorKeys.map((key) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <label className="text-xs capitalize flex-1" style={{ color: "var(--black)" }}>
+                      {key}
+                    </label>
+                    <input
+                      type="color"
+                      value={(customColors && customColors[key]) || "#000000"}
+                      onChange={(e) => handleColorChange(key, e.target.value)}
+                      className="w-8 h-8 p-0 border-0 cursor-pointer rounded-full"
+                    />
+                  </div>
+                ))}
+              </div>
+              <motion.button
+                onClick={resetColors}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="mt-3 px-4 py-1.5 text-sm rounded-lg cursor-pointer"
+                style={{ backgroundColor: "var(--blue)", color: "var(--white)" }}
+              >
+                Reset to Theme Defaults
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
