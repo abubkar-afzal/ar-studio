@@ -1,11 +1,16 @@
 // pages/index.js
-import { useContext, useRef, useCallback } from "react";
+import { useContext, useRef } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { AppContext } from "./_app";
+import Navbar from "../components/Navbar";
+import HeroSection from "../components/HeroSection";
 import ThemePicker from "../components/ThemePicker";
+import Footer from "../components/Footer";
 import EditorWorkspace from "../components/EditorWorkspace";
-import { FaCamera, FaVideo, FaMusic, FaExchangeAlt, FaImages, FaFilm, FaCompress } from "react-icons/fa";
+import { tools } from "../lib/tools";
+import blogs from "../data/blogs.json";
 
 const ThreeBackground = dynamic(() => import("../components/ThreeBackground"), { ssr: false });
 
@@ -13,114 +18,167 @@ export default function Home() {
   const { activeEditor, setActiveEditor } = useContext(AppContext);
   const editorContainerRef = useRef(null);
 
-  const launchEditor = useCallback(
-    (type) => {
-      setActiveEditor(type);
-      if (editorContainerRef.current) {
-        editorContainerRef.current.classList.remove("hidden");
-      }
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.warn("Auto fullscreen failed – use the button inside the editor.", err);
-      });
-    },
-    [setActiveEditor]
-  );
-
   const exitEditor = () => {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     setActiveEditor(null);
     if (editorContainerRef.current) editorContainerRef.current.classList.add("hidden");
   };
 
-  const buttonVariants = {
-    hover: { scale: 1.05, transition: { type: "spring", stiffness: 300 } },
-    tap: { scale: 0.95 },
+  const launchEditor = (type) => {
+    setActiveEditor(type);
+    if (editorContainerRef.current) {
+      editorContainerRef.current.classList.remove("hidden");
+    }
+    document.documentElement.requestFullscreen().catch(() => {});
   };
 
-  const editors = [
-    { label: "Photo Editor", icon: <FaCamera />, type: "photo" },
-    { label: "Video Combinor", icon: <FaVideo />, type: "video" },
-    { label: "Audio Editor", icon: <FaMusic />, type: "audio" },
-    { label: "Video to Audio", icon: <FaExchangeAlt />, type: "video-to-audio" },
-    { label: "Photo Collage", icon: <FaImages />, type: "photo-collage" },
-    { label: "Video Collage", icon: <FaFilm />, type: "video-collage" },
-    { label: "Media Compressor", icon: <FaCompress />, type: "media-compressor" },
-  ];
+  const latestBlogs = [...blogs]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 3);
+
+  const featuredTools = tools.slice(0, 3);
 
   return (
-    <div
-      className="relative min-h-screen overflow-hidden"
-      style={{ backgroundColor: "var(--white)" }}
-    >
+    <div className="relative min-h-screen" style={{ backgroundColor: "var(--white)" }}>
       <ThreeBackground />
+      <Navbar />
 
-      <div
-        className={`relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-8 ${
-          activeEditor ? "hidden" : ""
-        }`}
-      >
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-4xl sm:text-5xl mm:text-6xl font-bold mb-4"
-          style={{ color: "var(--black)" }}
-        >
-          Creative Studio
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-base mm:text-lg mb-8 max-w-2xl text-center"
-          style={{ color: "var(--gray)" }}
-        >
-          A free, browser‑based media editor with photo, video and audio tools.
-          Pick your theme and dive into full‑screen editing.
-        </motion.p>
+      <div className={activeEditor ? "hidden" : ""}>
+        <HeroSection />
 
+        {/* Featured Tools */}
+        <section className="py-16 px-4" style={{ backgroundColor: "var(--lightgray)" }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-bold" style={{ color: "var(--black)" }}>
+                Featured Tools
+              </h2>
+              <Link href="/features">
+                <span className="text-sm font-medium hover:opacity-70 transition" style={{ color: "var(--blue)" }}>
+                  View all tools →
+                </span>
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredTools.map((tool) => (
+                <motion.div
+                  key={tool.type}
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => launchEditor(tool.type)}
+                  className="rounded-2xl p-6 cursor-pointer shadow-lg transition-all duration-300 border hover:shadow-xl"
+                  style={{
+                    backgroundColor: "var(--white)",
+                    borderColor: "var(--border)",
+                    color: "var(--black)",
+                  }}
+                >
+                  <div
+                    className="text-4xl mb-3"
+                    style={{ color: tool.type === "video-to-audio" ? "var(--yellow)" : "var(--blue)" }}
+                  >
+                    {tool.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{tool.label}</h3>
+                  <p className="text-sm" style={{ color: "var(--gray)" }}>{tool.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Latest Blogs */}
+        <section className="py-16 px-4" style={{ backgroundColor: "var(--white)" }}>
+          <div className="max-w-6xl mx-auto">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-bold" style={{ color: "var(--black)" }}>
+                Latest Articles
+              </h2>
+              <Link href="/blog">
+                <span className="text-sm font-medium hover:opacity-70 transition" style={{ color: "var(--blue)" }}>
+                  View all →
+                </span>
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {latestBlogs.map((post, idx) => (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -5 }}
+                  className="rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all"
+                  style={{ backgroundColor: "var(--white)", borderColor: "var(--border)" }}
+                >
+                  <Link href={`/blog/${post.slug}`}>
+                    <div className="cursor-pointer">
+                      <img src={post.image} alt={post.title} className="w-full h-40 object-cover" />
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold mb-1" style={{ color: "var(--black)" }}>
+                          {post.title}
+                        </h3>
+                        <p className="text-sm mb-2" style={{ color: "var(--gray)" }}>{post.excerpt}</p>
+                        <span className="text-xs" style={{ color: "var(--gray)" }}>
+                          {new Date(post.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+{/* Games / Timepass Section */}
+<section className="py-16 px-4" style={{ backgroundColor: "var(--lightgray)" }}>
+  <div className="max-w-7xl mx-auto">
+    <div className="flex justify-between items-center mb-8">
+      <h2 className="text-3xl font-bold" style={{ color: "var(--black)" }}>
+        🎮 Timepass
+      </h2>
+      <Link href="/games">
+        <span className="text-sm font-medium hover:opacity-70 transition" style={{ color: "var(--blue)" }}>
+          View all games →
+        </span>
+      </Link>
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <Link href="/games/snake">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="flex flex-wrap gap-3 justify-center mb-6"
+          whileHover={{ scale: 1.03, y: -5 }}
+          className="rounded-2xl p-6 cursor-pointer shadow-lg border hover:shadow-xl"
+          style={{ backgroundColor: "var(--white)", borderColor: "var(--border)" }}
         >
-          {editors.map((btn) => (
-            <motion.button
-              key={btn.type}
-              onClick={() => launchEditor(btn.type)}
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-              className="px-4 py-2 mm:px-6 mm:py-3 rounded-2xl shadow-lg font-semibold cursor-pointer flex items-center gap-2"
-              style={{
-                backgroundColor: btn.type === "video-to-audio" ? "var(--yellow)" : "var(--blue)",
-                color: btn.type === "video-to-audio" ? "var(--black)" : "var(--white)",
-              }}
-            >
-              {btn.icon} {btn.label}
-            </motion.button>
-          ))}
+          <div className="text-4xl mb-2" style={{ color: "#22c55e" }}>🐍</div>
+          <h3 className="text-xl font-semibold" style={{ color: "var(--black)" }}>3D Snake</h3>
+          <p className="text-sm" style={{ color: "var(--gray)" }}>Classic snake in 3D</p>
         </motion.div>
-
+      </Link>
+      <Link href="/games/chess">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="w-full max-w-md"
+          whileHover={{ scale: 1.03, y: -5 }}
+          className="rounded-2xl p-6 cursor-pointer shadow-lg border hover:shadow-xl"
+          style={{ backgroundColor: "var(--white)", borderColor: "var(--border)" }}
         >
-          <ThemePicker />
+          <div className="text-4xl mb-2" style={{ color: "#3b82f6" }}>♟️</div>
+          <h3 className="text-xl font-semibold" style={{ color: "var(--black)" }}>3D Chess</h3>
+          <p className="text-sm" style={{ color: "var(--gray)" }}>Play chess in 3D</p>
         </motion.div>
+      </Link>
+    </div>
+  </div>
+</section>
+
+        <Footer />
       </div>
 
       <div
         ref={editorContainerRef}
         className={`fixed inset-0 z-50 ${activeEditor ? "" : "hidden"}`}
-        style={{
-          backgroundColor: "var(--white)",
-          width: "100vw",
-          height: "100vh",
-        }}
+        style={{ backgroundColor: "var(--white)", width: "100vw", height: "100vh" }}
       >
         {activeEditor && <EditorWorkspace type={activeEditor} onExit={exitEditor} />}
       </div>

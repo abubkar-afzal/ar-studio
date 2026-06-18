@@ -17,6 +17,7 @@
     "@remotion/player": "^4.0.474",
     "@remotion/renderer": "^4.0.474",
     "axios": "^1.17.0",
+    "chess.js": "^1.4.0",
     "framer-motion": "^12.40.0",
     "mediabunny": "^1.46.0",
     "next": "16.0.1",

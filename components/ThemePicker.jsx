@@ -37,7 +37,7 @@ export default function ThemePicker() {
 
   return (
     <div
-      className="p-4 rounded-2xl border"
+      className="p-4 rounded-2xl border relative"
       style={{
         backgroundColor: "var(--lightgray)",
         borderColor: "var(--darkgray)",
@@ -63,7 +63,7 @@ export default function ThemePicker() {
         ))}
       </div>
 
-      {/* Custom dropdown toggle */}
+      {/* Custom colors toggle */}
       <div className="mt-2">
         <motion.button
           onClick={toggleDropdown}
@@ -72,7 +72,7 @@ export default function ThemePicker() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <span> Custom Colors</span>
+          <span>Custom Colors</span>
           <motion.span
             animate={{ rotate: isCustomOpen ? 180 : 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}

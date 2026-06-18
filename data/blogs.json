@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "slug": "10-tips-for-stunning-photo-collages",
+    "title": "10 Tips for Stunning Photo Collages",
+    "excerpt": "Learn how to arrange photos for maximum impact using our Photo Collage tool.",
+    "content": "Creating a photo collage is an art. Here are 10 tips to make yours stand out...",
+    "date": "2025-06-15",
+    "image": "https://picsum.photos/seed/collage/800/400"
+  },
+  {
+    "id": 2,
+    "slug": "reduce-video-size-without-losing-quality",
+    "title": "How to Reduce Video File Size Without Losing Quality",
+    "excerpt": "Our Media Compressor makes it easy – here's how to get the best results.",
+    "content": "Video files can be huge. Use our compressor to shrink them while retaining clarity...",
+    "date": "2025-06-10",
+    "image": "https://picsum.photos/seed/compress/800/400"
+  },
+  {
+    "id": 3,
+    "slug": "audio-editing-techniques-for-beginners",
+    "title": "The Best Audio Editing Techniques for Beginners",
+    "excerpt": "Start with gain, EQ, and trimming – master the basics with our Audio Editor.",
+    "content": "Audio editing doesn't have to be complicated. Learn the essential techniques...",
+    "date": "2025-06-05",
+    "image": "https://picsum.photos/seed/audio/800/400"
+  },
+  {
+    "id": 4,
+    "slug": "mastering-video-combining",
+    "title": "Mastering Video Combining: A Complete Guide",
+    "excerpt": "Combine multiple clips into one seamless video with our Video Combinor.",
+    "content": "Our Video Combinor lets you merge, trim, and arrange clips effortlessly...",
+    "date": "2025-05-28",
+    "image": "https://picsum.photos/seed/video/800/400"
+  },
+  {
+    "id": 5,
+    "slug": "photo-editing-tips-for-beginners",
+    "title": "Photo Editing Tips for Beginners",
+    "excerpt": "Transform your photos with our Photo Editor – from cropping to filters.",
+    "content": "Start editing your photos like a pro with these simple yet powerful techniques...",
+    "date": "2025-05-20",
+    "image": "https://picsum.photos/seed/photo/800/400"
+  },
+  {
+    "id": 6,
+    "slug": "extract-audio-from-video",
+    "title": "How to Extract Audio from Any Video",
+    "excerpt": "Use our Video to Audio converter to pull high-quality audio tracks.",
+    "content": "Need the audio from a video? Our converter extracts it in seconds...",
+    "date": "2025-05-15",
+    "image": "https://picsum.photos/seed/audioextract/800/400"
+  }
+]
