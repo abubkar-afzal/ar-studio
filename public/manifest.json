@@ -1,0 +1,13 @@
+{
+  "name": "AR Studio",
+  "short_name": "AR Studio",
+  "description": "Free browser-based creative suite with photo, video, and audio editing tools.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    { "src": "/my_logo.jpg", "sizes": "192x192", "type": "image/png" },
+    { "src": "/my_logo.jpg", "sizes": "96x96", "type": "image/png" }
+  ]
+}
