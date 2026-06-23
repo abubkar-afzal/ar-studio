@@ -465,11 +465,8 @@ export default function Home() {
       </motion.div>
 
       <h2 className="text-5xl md:text-7xl font-black mb-5 tracking-tight flex sm:flex-col t:flex-row" style={{ color: "var(--black)" }}>
-        Games 
-        <span
-         
-        >
-          Arcade
+        Games{""}
+        <span>Arcade
         </span>
       </h2>
       <p className="text-lg md:text-xl max-w-xl mx-auto leading-relaxed" style={{ color: "var(--gray)" }}>

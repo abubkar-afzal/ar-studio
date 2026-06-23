@@ -68,7 +68,7 @@ export default function Document() {
           name="twitter:description"
           content="Edit photos, videos, and audio directly in your browser. No downloads, no signups, completely free."
         />
-        <meta name="twitter:image" content="https://arstudio.com/my_logo.jpg" />
+        <meta name="twitter:image" content="https://ar-studio-five.vercel.app/my_logo.jpg" />
         <meta name="twitter:image:alt" content="AR Studio – Free Creative Tools" />
 
         {/* ─── Open Graph / Facebook ────────────────────────── */}
@@ -80,8 +80,8 @@ export default function Document() {
           property="og:description"
           content="Powerful photo, video, and audio editing tools that run entirely in your browser. No signup required, no files uploaded — 100% private and free."
         />
-        <meta property="og:url" content="https://arstudio.com" />
-        <meta property="og:image" content="https://arstudio.com/my_logo.jpg" />
+        <meta property="og:url" content="https://ar-studio-five.vercel.app" />
+        <meta property="og:image" content="https://ar-studio-five.vercel.app/my_logo.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="AR Studio – Free Browser-Based Creative Suite" />
@@ -95,7 +95,7 @@ export default function Document() {
               "@context": "https://schema.org",
               "@type": "WebApplication",
               name: "AR Studio",
-              url: "https://arstudio.com",
+              url: "https://ar-studio-five.vercel.app",
               description:
                 "Free browser-based creative suite with photo editor, video combiner, audio editor, collage makers, and file compressor. No signup required.",
               applicationCategory: "Multimedia",
@@ -118,7 +118,7 @@ export default function Document() {
               publisher: {
                 "@type": "Organization",
                 name: "AR Studio",
-                url: "https://arstudio.com",
+                url: "https://ar-studio-five.vercel.app",
               },
               browserRequirements: "Requires JavaScript. Works best on Chrome, Firefox, Edge, and Safari.",
               featureList: [
@@ -142,8 +142,8 @@ export default function Document() {
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "AR Studio",
-              url: "https://arstudio.com",
-              logo: "https://arstudio.com/my_logo.jpg",
+              url: "https://ar-studio-five.vercel.app",
+              logo: "https://ar-studio-five.vercel.app/my_logo.jpg",
               sameAs: [
                 "https://github.com/abubkar-afzal",
                 "https://www.linkedin.com/in/hafiz-abubakar-afzal-b77a46354/",
@@ -170,19 +170,19 @@ export default function Document() {
                   "@type": "ListItem",
                   position: 1,
                   name: "Home",
-                  item: "https://arstudio.com",
+                  item: "https://ar-studio-five.vercel.app",
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
                   name: "Features",
-                  item: "https://arstudio.com/features",
+                  item: "https://ar-studio-five.vercel.app/features",
                 },
                 {
                   "@type": "ListItem",
                   position: 3,
                   name: "Blog",
-                  item: "https://arstudio.com/blog",
+                  item: "https://ar-studio-five.vercel.app/blog",
                 },
               ],
             }),
