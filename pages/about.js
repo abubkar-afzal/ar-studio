@@ -230,7 +230,7 @@ export default function About() {
               All our tools are free, no signup required. Pick a tool and start editing right in your browser.
             </p>
             <motion.a
-              href="/features"
+              href="/tools"
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
               className="inline-flex px-6 py-3 rounded-full text-sm font-semibold items-center gap-2"

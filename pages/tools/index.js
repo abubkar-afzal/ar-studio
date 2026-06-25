@@ -1,4 +1,4 @@
-// pages/features/index.js
+// pages/tools/index.js
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { motion } from "framer-motion";
@@ -22,7 +22,7 @@ const toolMeta = {
   "media-compressor": { icon: <FiDownload size={32} />, color: "var(--teal)" },
 };
 
-export default function Features() {
+export default function Tools() {
   const { activeEditor, setActiveEditor } = useContext(AppContext);
   const editorContainerRef = useRef(null);
   const [hoveredTool, setHoveredTool] = useState(null);

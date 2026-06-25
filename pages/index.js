@@ -15,7 +15,7 @@ import { AppContext } from "./_app";
 import Navbar from "../components/Navbar";
 import HeroSection from "../components/HeroSection";
 import Footer from "../components/Footer";
-import EditorWorkspace from "./features/EditorWorkspace";
+import EditorWorkspace from "./tools/EditorWorkspace";
 import { tools } from "../lib/tools";
 import blogs from "../data/blogs.json";
 
@@ -240,7 +240,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════════ */}
         {/* FEATURED TOOLS – Bento Grid */}
         {/* ═══════════════════════════════════════════════════════ */}
-        <section id="features" className="py-24 px-4 relative" style={{ backgroundColor: "var(--lightgray)" }}>
+        <section id="tools" className="py-24 px-4 relative" style={{ backgroundColor: "var(--lightgray)" }}>
           <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
             style={{ backgroundImage: "radial-gradient(circle, var(--blue) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
           <div className="max-w-7xl mx-auto relative z-10">
@@ -272,7 +272,7 @@ export default function Home() {
               ))}
             </div>
             <div className="text-center mt-12">
-              <Link href="/features">
+              <Link href="/tools">
                 <motion.span whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-bold cursor-pointer shadow-xl"
                   style={{ backgroundColor: "var(--blue)", color: "var(--white)", boxShadow: "0 8px 32px rgba(37,99,235,0.3)" }}>
@@ -815,7 +815,7 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap justify-center gap-5">
                 <motion.button whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }}
-                  onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+                  onClick={() => document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" })}
                   className="px-9 py-4 rounded-full font-bold text-lg flex items-center gap-3 cursor-pointer shadow-2xl"
                   style={{ backgroundColor: "var(--white)", color: "var(--blue)" }}>
                   <FiCommand size={22} /> Explore All Tools

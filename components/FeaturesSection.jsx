@@ -1,4 +1,4 @@
-// components/FeaturesSection.jsx
+// components/ToolsSection.jsx
 import { useContext } from "react";
 import { motion } from "framer-motion";
 import { AppContext } from "../pages/_app";
@@ -22,7 +22,7 @@ const tools = [
   { label: "Media Compressor", icon: <FaCompress />, type: "media-compressor", desc: "Reduce file size without quality loss." },
 ];
 
-export default function FeaturesSection() {
+export default function ToolsSection() {
   const { setActiveEditor } = useContext(AppContext);
 
   const launchEditor = (type) => {
@@ -49,7 +49,7 @@ export default function FeaturesSection() {
 
   return (
     <section
-      id="features"
+      id="tools"
       className="py-16 px-4"
       style={{ backgroundColor: "var(--lightgray)" }}
     >

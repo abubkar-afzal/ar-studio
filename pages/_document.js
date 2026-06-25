@@ -29,20 +29,20 @@ export default function Document() {
         <meta name="developer" content="Hafiz Abubakar Afzal" />
 
         {/* ─── Favicon & Icons ─────────────────────────────── */}
-        <link rel="icon" type="image/png" sizes="16x16" href="/my_logo.jpg" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/my_logo.jpg" />
-        <link rel="icon" type="image/png" sizes="96x96" href="/my_logo.jpg" />
-        <link rel="icon" type="image/x-icon" href="/my_logo.jpg" />
-        <link rel="apple-touch-icon" sizes="57x57" href="/my_logo.jpg" />
-        <link rel="apple-touch-icon" sizes="60x60" href="/my_logo.jpg" />
-        <link rel="apple-touch-icon" sizes="72x72" href="/my_logo.jpg" />
-        <link rel="apple-touch-icon" sizes="76x76" href="/my_logo.jpg" />
-        <link rel="apple-touch-icon" sizes="114x114" href="/my_logo.jpg" />
-        <link rel="apple-touch-icon" sizes="120x120" href="/my_logo.jpg" />
-        <link rel="apple-touch-icon" sizes="144x144" href="/my_logo.jpg" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/my_logo.jpg" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/my_logo.jpg" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/my_logo.jpg" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/my_logo_no_bg.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/my_logo_no_bg.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/my_logo_no_bg.png" />
+        <link rel="icon" type="image/x-icon" href="/my_logo_no_bg.png" />
+        <link rel="apple-touch-icon" sizes="57x57" href="/my_logo_no_bg.png" />
+        <link rel="apple-touch-icon" sizes="60x60" href="/my_logo_no_bg.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/my_logo_no_bg.png" />
+        <link rel="apple-touch-icon" sizes="76x76" href="/my_logo_no_bg.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/my_logo_no_bg.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/my_logo_no_bg.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/my_logo_no_bg.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/my_logo_no_bg.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/my_logo_no_bg.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/my_logo_no_bg.png" />
         <link rel="manifest" href="/manifest.json" />
 
         {/* ─── Preconnect for Performance ──────────────────── */}
@@ -68,7 +68,7 @@ export default function Document() {
           name="twitter:description"
           content="Edit photos, videos, and audio directly in your browser. No downloads, no signups, completely free."
         />
-        <meta name="twitter:image" content="https://ar-studio-five.vercel.app/my_logo.jpg" />
+        <meta name="twitter:image" content="https://ar-studio-five.vercel.app/my_logo_no_bg.png" />
         <meta name="twitter:image:alt" content="AR Studio – Free Creative Tools" />
 
         {/* ─── Open Graph / Facebook ────────────────────────── */}
@@ -81,7 +81,7 @@ export default function Document() {
           content="Powerful photo, video, and audio editing tools that run entirely in your browser. No signup required, no files uploaded — 100% private and free."
         />
         <meta property="og:url" content="https://ar-studio-five.vercel.app" />
-        <meta property="og:image" content="https://ar-studio-five.vercel.app/my_logo.jpg" />
+        <meta property="og:image" content="https://ar-studio-five.vercel.app/my_logo_no_bg.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="AR Studio – Free Browser-Based Creative Suite" />
@@ -143,7 +143,7 @@ export default function Document() {
               "@type": "Organization",
               name: "AR Studio",
               url: "https://ar-studio-five.vercel.app",
-              logo: "https://ar-studio-five.vercel.app/my_logo.jpg",
+              logo: "https://ar-studio-five.vercel.app/my_logo_no_bg.png",
               sameAs: [
                 "https://github.com/abubkar-afzal",
                 "https://www.linkedin.com/in/hafiz-abubakar-afzal-b77a46354/",
@@ -175,8 +175,8 @@ export default function Document() {
                 {
                   "@type": "ListItem",
                   position: 2,
-                  name: "Features",
-                  item: "https://ar-studio-five.vercel.app/features",
+                  name: "Tools",
+                  item: "https://ar-studio-five.vercel.app/tools",
                 },
                 {
                   "@type": "ListItem",

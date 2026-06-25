@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaBars, FaTimes, FaHome, FaThLarge, FaGamepad, FaBlog, FaInfoCircle, FaEnvelope, FaArrowRight } from "react-icons/fa";
-
+import logo from "../public/my_logo_no_bg.png"
+import Image from "next/image";
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -22,7 +23,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", path: "/", icon: <FaHome size={14} /> },
-    { name: "Features", path: "/features", icon: <FaThLarge size={14} /> },
+    { name: "Tools", path: "/tools", icon: <FaThLarge size={14} /> },
     { name: "Games", path: "/games", icon: <FaGamepad size={14} /> },
     { name: "Blog", path: "/blog", icon: <FaBlog size={14} /> },
     { name: "About", path: "/about", icon: <FaInfoCircle size={14} /> },
@@ -64,9 +65,9 @@ export default function Navbar() {
                 whileHover={{ rotate: -5, scale: 1.05 }}
                 transition={{ duration: 0.2 }}
                 className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "var(--blue)" }}
+                style={{backgroundColor : "var(--blue)"}}
               >
-                <span className="text-sm font-bold" style={{ color: "var(--white)" }}>AR</span>
+                <Image src={logo} alt="logo" width={30} height={30} className="w-8 h-8 rounded-sm"/>
               </motion.div>
               <span
                 className="text-lg font-bold tracking-tight hidden sm:block"
