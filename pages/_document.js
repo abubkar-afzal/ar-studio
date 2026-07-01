@@ -44,6 +44,7 @@ export default function Document() {
         <link rel="apple-touch-icon" sizes="180x180" href="/my_logo_no_bg.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/my_logo_no_bg.png" />
         <link rel="manifest" href="/manifest.json" />
+        <title>AR Studio – Free Browser-Based Creative Suite</title>
 
         {/* ─── Preconnect for Performance ──────────────────── */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -58,11 +59,11 @@ export default function Document() {
         />
         <meta
           name="keywords"
-          content="photo editor, video editor, audio editor, video combiner, photo collage, video collage, media compressor, free editor, online editor, browser editor, no signup, AR Studio, Hafiz Abu Bakar Afzal"
+          content="photo editor, video editor, audio editor, video combiner, photo collage, video collage, media compressor, free editor, online editor, browser editor, no signup, AR Studio, Hafiz Abubakar Afzal"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@arstudio" />
-        <meta name="twitter:creator" content="@hafizabubakar" />
+        <meta name="twitter:creator" content="@hafizabubakarafzal" />
         <meta name="twitter:title" content="AR Studio – Free Browser-Based Creative Suite" />
         <meta
           name="twitter:description"
@@ -181,8 +182,26 @@ export default function Document() {
                 {
                   "@type": "ListItem",
                   position: 3,
+                  name: "Games",
+                  item: "https://ar-studio-five.vercel.app/games",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 4,
                   name: "Blog",
                   item: "https://ar-studio-five.vercel.app/blog",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 5,
+                  name: "About",
+                  item: "https://ar-studio-five.vercel.app/about",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 6,
+                  name: "Contact",
+                  item: "https://ar-studio-five.vercel.app/contact",
                 },
               ],
             }),
